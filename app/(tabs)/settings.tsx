@@ -1,29 +1,16 @@
-import {
-    Bell,
-    ChevronRight,
-    CreditCard,
-    CreditCard as Edit,
-    CircleHelp as HelpCircle,
-    LogOut,
-    Mail,
-    Phone,
-    Settings,
-    Shield,
-    User
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
-import '../../global.css';
 import { profileService } from '../../services/api';
 
 interface UserProfile {
@@ -57,7 +44,7 @@ export default function SettingsScreen() {
       id: '1',
       title: 'Account Settings',
       subtitle: 'Manage your account details',
-      icon: <Settings size={24} color="#6B7280" />,
+      icon: <Ionicons name="settings-outline" size={24} color="#6B7280" />,
       color: '#F3F4F6',
       action: 'account',
     },
@@ -65,7 +52,7 @@ export default function SettingsScreen() {
       id: '2',
       title: 'Notifications',
       subtitle: 'Manage notification preferences',
-      icon: <Bell size={24} color="#3B82F6" />,
+      icon: <Ionicons name="notifications-outline" size={24} color="#3B82F6" />,
       color: '#DBEAFE',
       action: 'notifications',
     },
@@ -73,7 +60,7 @@ export default function SettingsScreen() {
       id: '3',
       title: 'Payment Methods',
       subtitle: 'Add or manage payment methods',
-      icon: <CreditCard size={24} color="#10B981" />,
+      icon: <Ionicons name="card-outline" size={24} color="#10B981" />,
       color: '#D1FAE5',
       action: 'payments',
     },
@@ -81,7 +68,7 @@ export default function SettingsScreen() {
       id: '4',
       title: 'Privacy & Security',
       subtitle: 'Control your privacy settings',
-      icon: <Shield size={24} color="#F59E0B" />,
+      icon: <Ionicons name="shield-checkmark-outline" size={24} color="#F59E0B" />,
       color: '#FEF3C7',
       action: 'security',
     },
@@ -89,7 +76,7 @@ export default function SettingsScreen() {
       id: '5',
       title: 'Help & Support',
       subtitle: 'Get help or contact support',
-      icon: <HelpCircle size={24} color="#8B5CF6" />,
+      icon: <Ionicons name="help-circle-outline" size={24} color="#8B5CF6" />,
       color: '#EDE9FE',
       action: 'help',
     },
@@ -98,16 +85,38 @@ export default function SettingsScreen() {
   // Load user profile data
   useEffect(() => {
     const loadUserProfile = async () => {
-      if (!user) return;
+      if (!user) {
+        // Set default profile when no user is available
+        setUserProfile({
+          name: 'Kullanıcı',
+          email: 'user@example.com',
+          phone: '-',
+          memberSince: 'January 2024',
+        });
+        return;
+      }
       
       try {
         const { data: profile, error } = await profileService.getProfile(user.id);
-        if (error) throw error;
+        
+        if (error || !profile) {
+          // Use user data as fallback when profile is not available
+          setUserProfile({
+            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Kullanıcı',
+            email: user.email || 'user@example.com',
+            phone: user.user_metadata?.phone || '-',
+            memberSince: new Date(user.created_at || Date.now()).toLocaleDateString('en-US', { 
+              month: 'long', 
+              year: 'numeric' 
+            }),
+          });
+          return;
+        }
 
         if (profile) {
           setUserProfile({
-            name: profile.full_name || user.email || 'Kullanıcı',
-            email: profile.email || user.email || '',
+            name: profile.full_name || user.email?.split('@')[0] || 'Kullanıcı',
+            email: profile.email || user.email || 'user@example.com',
             phone: profile.phone || '-',
             memberSince: new Date(profile.created_at).toLocaleDateString('en-US', { 
               month: 'long', 
@@ -117,6 +126,13 @@ export default function SettingsScreen() {
         }
       } catch (error) {
         console.error('Error loading user profile:', error);
+        // Set fallback data on error
+        setUserProfile({
+          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Kullanıcı',
+          email: user.email || 'user@example.com',
+          phone: user.user_metadata?.phone || '-',
+          memberSince: 'January 2024',
+        });
       }
     };
 
@@ -158,7 +174,7 @@ export default function SettingsScreen() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
           <TouchableOpacity style={styles.editButton}>
-            <Edit size={20} color="#6B7280" />
+            <Ionicons name="create-outline" size={20} color="#6B7280" />
           </TouchableOpacity>
         </View>
 
@@ -167,7 +183,7 @@ export default function SettingsScreen() {
           <View style={styles.profileHeader}>
             <View style={styles.avatarContainer}>
               <View style={styles.avatar}>
-                <User size={40} color="#6B7280" />
+                <Ionicons name="person-outline" size={40} color="#6B7280" />
               </View>
               <View style={styles.onlineIndicator} />
             </View>
@@ -182,11 +198,11 @@ export default function SettingsScreen() {
           <View style={styles.contactSection}>
             <Text style={styles.contactTitle}>Contact Information</Text>
             <View style={styles.contactItem}>
-              <Mail size={16} color="#6B7280" />
+              <Ionicons name="mail-outline" size={16} color="#6B7280" />
               <Text style={styles.contactText}>{userProfile.email}</Text>
             </View>
             <View style={styles.contactItem}>
-              <Phone size={16} color="#6B7280" />
+              <Ionicons name="call-outline" size={16} color="#6B7280" />
               <Text style={styles.contactText}>{userProfile.phone}</Text>
             </View>
           </View>
@@ -208,14 +224,14 @@ export default function SettingsScreen() {
                   )}
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <LogOut size={20} color="#EF4444" />
+          <Ionicons name="log-out-outline" size={20} color="#EF4444" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 

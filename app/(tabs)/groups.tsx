@@ -6,7 +6,6 @@ import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../../components/buton';
 import { useAuth } from '../../contexts/AuthContext';
-import '../../global.css';
 import { groupService } from '../../services/api';
 
 export default function GroupsScreen() {

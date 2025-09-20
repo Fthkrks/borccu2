@@ -4,7 +4,7 @@ export type RootStackParamList = {
   Auth: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   DebtDetail: {
-    debt: {
+    debt: string | {
       id: string;
       name: string;
       type: 'owe' | 'owed';

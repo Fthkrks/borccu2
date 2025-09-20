@@ -46,6 +46,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (error) {
           console.error('Auth session error:', error);
+          // Don't crash, just continue with no session
+          setSession(null);
+          setUser(null);
         } else {
           setSession(session);
           setUser(session?.user ?? null);
@@ -54,6 +57,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setLoading(false);
       } catch (error) {
         console.error('Auth initialization error:', error);
+        // Ensure we don't crash - set safe defaults
+        setSession(null);
+        setUser(null);
         setLoading(false);
       }
     };
@@ -75,18 +81,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setLoading(false);
         } catch (error) {
           console.error('Auth state change error:', error);
+          // Ensure safe state even on error
+          setSession(null);
+          setUser(null);
+          setLoading(false);
         }
       });
 
       return () => {
         try {
-          subscription.unsubscribe();
+          subscription?.unsubscribe();
         } catch (error) {
           console.error('Auth subscription cleanup error:', error);
         }
       };
     } catch (error) {
       console.error('Auth listener setup error:', error);
+      // Ensure loading is false even if listener setup fails
+      setLoading(false);
     }
   }, []);
 
