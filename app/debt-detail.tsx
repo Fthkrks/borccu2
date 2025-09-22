@@ -63,8 +63,8 @@ export default function DebtDetailScreen() {
 
   const debtAmount = (debt.youwillreceive || 0) > 0 ? (debt.youwillreceive || 0) : (debt.youwillgive || 0);
   const isOwed = (debt.youwillgive || 0) > 0;
-  const creditor = debt.creditor;
-  const debtor = debt.debtor;
+  // API'den gelen işlenmiş veriyi kullan
+  const otherParty = debt.other_party || (isOwed ? debt.creditor : debt.debtor);
 
   return (
     <View style={styles.container}>
@@ -95,7 +95,7 @@ export default function DebtDetailScreen() {
             <View style={styles.debtInfoRow}>
               <Text style={styles.debtInfoLabel}>Kişi:</Text>
               <Text style={styles.debtInfoValue}>
-                {isOwed ? creditor?.full_name || 'Bilinmeyen' : debtor?.full_name || 'Bilinmeyen'}
+                {otherParty?.full_name || otherParty?.email || 'Bilinmeyen'}
               </Text>
             </View>
             

@@ -159,14 +159,21 @@ export default function NotificationScreen() {
   const handleDeclineRequest = async (requestId: string) => {
     if (!user) return;
     
+    console.log('🔍 handleDeclineRequest called with:', { requestId, userId: user.id });
+    
     try {
-      const { error } = await friendService.respondFriendRequest(requestId, 'declined');
-      if (error) throw error;
+      // Direkt Supabase ile güncelle
+      const { error } = await friendService.rejectFriendRequest(requestId, user.id);
+      console.log('🔍 rejectFriendRequest result:', { error });
       
-      Alert.alert('Başarılı', 'Arkadaşlık isteği reddedildi');
+      if (error) {
+        throw error;
+      } else {
+        Alert.alert('Başarılı', 'Arkadaşlık isteği reddedildi');
+      }
       
-      // Reload friend requests
-      const { data, error: reloadError } = await friendService.getFriendRequests(user.id);
+      // Reload friend requests regardless of success/failure
+      const { data, error: reloadError } = await friendService.getIncomingFriendRequests(user.id);
       if (reloadError) {
         console.error('Error reloading friend requests:', reloadError);
       } else {

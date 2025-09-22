@@ -91,7 +91,7 @@ export default function HomeScreen() {
     }
   };
 
-  // Hesaplanan değerler - Yeni debts yapısına göre
+  // Hesaplanan değerler - API'den gelen işlenmiş veriye göre
   const debtsData = {
     youwillreceive: debts
       .filter(d => !d.is_settled)
@@ -102,11 +102,18 @@ export default function HomeScreen() {
     allDebts: debts
       .filter(d => !d.is_settled)
       .map(d => {
-        const amount = (d.youwillreceive || 0) > 0 ? (d.youwillreceive || 0) : (d.youwillgive || 0);
+        console.log('🔍 Debt mapping DEBUG:', { 
+          id: d.id, 
+          youwillreceive: d.youwillreceive, 
+          youwillgive: d.youwillgive,
+          other_party: d.other_party
+        });
+        
+        const amount = (d.youwillreceive || 0) + (d.youwillgive || 0);
         const type = (d.youwillreceive || 0) > 0 ? 'owe' as const : 'owed' as const;
-        const name = type === 'owe' 
-          ? (d.debtor?.full_name || d.debtor?.email) 
-          : (d.creditor?.full_name || d.creditor?.email);
+        const name = d.other_party?.full_name || d.other_party?.email || 'Bilinmeyen';
+        
+        console.log('🔍 Mapped result:', { amount, type, name });
         
         return {
           id: d.id,

@@ -119,8 +119,10 @@ export default function FriendScreen() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, user]);
 
-  // Show search results if searching, otherwise show suggested friends
-  const filteredFriends = searchQuery.trim() ? searchResults : suggestedFriends;
+  // Arama yapılmadığında sadece arkadaşları göster, arama yapıldığında tüm sonuçları göster
+  const filteredFriends = searchQuery.trim() 
+    ? searchResults  // Arama yapıldığında tüm sonuçlar
+    : suggestedFriends.filter(friend => friend.isAdded); // Arama yapılmadığında sadece arkadaşlar
 
   const handleAddFriend = async (friendId: string) => {
     console.log('🔍 handleAddFriend called with friendId:', friendId);
@@ -261,7 +263,7 @@ export default function FriendScreen() {
         <View style={styles.friendsSection}>
           <View style={styles.friendsSectionHeader}>
             <Text style={styles.friendsSectionTitle}>
-              {searchQuery ? `Arama Sonuçları (${filteredFriends.length})` : 'Önerilen Arkadaşlar'}
+              {searchQuery ? `Arama Sonuçları (${filteredFriends.length})` : 'Arkadaşlar'}
             </Text>
             {!searchQuery && (
               <Button

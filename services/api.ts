@@ -93,7 +93,57 @@ export const debtService = {
       `)
       .or(`creditor_id.eq.${userId},debtor_id.eq.${userId}`)
       .order('created_at', { ascending: false });
-    return { data, error };
+    
+    if (error) {
+      return { data, error };
+    }
+    
+    // Her kullanıcı için farklı veri döndür
+    const processedData = (data || []).map(debt => {
+      console.log('🔍 Processing debt:', { 
+        id: debt.id, 
+        creditor_id: debt.creditor_id, 
+        debtor_id: debt.debtor_id, 
+        userId, 
+        youwillreceive: debt.youwillreceive, 
+        youwillgive: debt.youwillgive 
+      });
+      
+      const isCreditor = debt.creditor_id === userId;
+      const isDebtor = debt.debtor_id === userId;
+      
+      if (isCreditor) {
+        // Ben alacaklıyım - karşı taraf borçlu
+        console.log('🔍 User is creditor, setting youwillreceive:', debt.youwillreceive);
+        return {
+          ...debt,
+          youwillreceive: debt.youwillreceive || 0,
+          youwillgive: 0,
+          // Karşı tarafın bilgilerini göster
+          other_party: debt.debtor
+        };
+      } else if (isDebtor) {
+        // Ben borçluyum - karşı taraf alacaklı
+        console.log('🔍 User is debtor, setting youwillgive:', debt.youwillgive);
+        return {
+          ...debt,
+          youwillreceive: 0,
+          youwillgive: debt.youwillgive || 0,
+          // Karşı tarafın bilgilerini göster
+          other_party: debt.creditor
+        };
+      } else {
+        // Bu durum olmamalı ama güvenlik için
+        console.log('🔍 User is neither creditor nor debtor, skipping');
+        return null;
+      }
+      
+    });
+    
+    // null değerleri filtrele
+    const filteredData = processedData.filter(debt => debt !== null);
+    console.log('🔍 Final processed data:', filteredData);
+    return { data: filteredData, error: null };
   },
 
   async getDebtById(debtId: string) {
@@ -881,7 +931,7 @@ export const friendService = {
       const { data, error } = await supabase
         .from('friend_requests')
         .update({ 
-          status: 'rejected',
+          status: 'declined',
           responded_at: new Date().toISOString()
         })
         .eq('id', friendshipId)
@@ -932,10 +982,11 @@ export const friendService = {
       const { data: updatedRequest, error: updateError } = await supabase
         .from('friend_requests')
         .update({ 
-          status: status === 'accepted' ? 'accepted' : 'rejected',
+          status: status === 'accepted' ? 'accepted' : 'declined',
           responded_at: new Date().toISOString()
         })
         .eq('id', friendshipId)
+        .eq('status', 'pending')
         .select()
         .single();
 
