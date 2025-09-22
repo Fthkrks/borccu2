@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, Linking, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,12 +33,15 @@ export default function AddDebtScreen() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Arkadaş listesini yükle
-  useEffect(() => {
-    if (user) {
-      loadFriends();
-    }
-  }, [user]);
+  // Arkadaş listesini yükle - sayfa her görüntülendiğinde yenile
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        console.log('🔄 Refreshing friends list in add-debt screen');
+        loadFriends();
+      }
+    }, [user])
+  );
 
   const loadFriends = async () => {
     if (!user) return;
@@ -56,12 +59,24 @@ export default function AddDebtScreen() {
         return;
       }
 
+      console.log('🔍 Loading friends for user:', user.id);
       const { data, error } = await friendService.getFriends(user.id);
+      console.log('🔍 Friends API result:', { data, error });
+      
+      if (error) {
+        console.error('❌ Friends loading error:', error);
+        throw error;
+      }
+      
       if (data) {
+        console.log('✅ Setting friends:', data.length, 'friends found');
         setFriends(data);
+      } else {
+        console.log('⚠️ No friends data received');
+        setFriends([]);
       }
     } catch (error) {
-      console.error('Friends loading error:', error);
+      console.error('❌ Friends loading catch error:', error);
       // Fallback to mock data on error
       setFriends(mockContacts.map(contact => ({
         id: contact.id,

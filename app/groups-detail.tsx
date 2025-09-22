@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
@@ -54,22 +54,25 @@ export default function GroupsDetail() {
     loadGroupDetails();
   }, [groupId, user]);
 
-  // Load friends for member selection
-  useEffect(() => {
-    const loadFriends = async () => {
-      if (!user) return;
-      const { data } = await friendService.getFriends(user.id);
-      const mapped: FriendItem[] = (data || []).map((f: any) => ({
-        id: f.id,
-        name: f.full_name || f.email || 'Kullanıcı',
-        phone: f.phone || '-',
-        avatar: '👤',
-        email: f.email,
-      }));
-      setFriends(mapped);
-    };
-    loadFriends();
-  }, [user]);
+  // Load friends for member selection - sayfa her görüntülendiğinde yenile
+  useFocusEffect(
+    useCallback(() => {
+      const loadFriends = async () => {
+        if (!user) return;
+        console.log('🔄 Refreshing friends list in groups-detail screen');
+        const { data } = await friendService.getFriends(user.id);
+        const mapped: FriendItem[] = (data || []).map((f: any) => ({
+          id: f.id,
+          name: f.full_name || f.email || 'Kullanıcı',
+          phone: f.phone || '-',
+          avatar: '👤',
+          email: f.email,
+        }));
+        setFriends(mapped);
+      };
+      loadFriends();
+    }, [user])
+  );
 
   // Filter friends who are not already group members
   const filteredContacts = friends.filter(contact => {

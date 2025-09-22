@@ -96,6 +96,20 @@ export const debtService = {
     return { data, error };
   },
 
+  async getDebtById(debtId: string) {
+    const { data, error } = await supabase
+      .from('debts')
+      .select(`
+        *,
+        creditor:profiles!debts_creditor_id_fkey (id, full_name, email, avatar_url),
+        debtor:profiles!debts_debtor_id_fkey (id, full_name, email, avatar_url)
+      `)
+      .eq('id', debtId)
+      .single();
+    
+    return { data, error };
+  },
+
   async settleDebt(debtId: string) {
     const { data, error } = await supabase
       .from('debts')
@@ -553,6 +567,8 @@ export const friendService = {
   // Kabul edilmiş arkadaşları getir
   async getFriends(userId: string) {
     try {
+      console.log('🔍 getFriends called with userId:', userId);
+      
       const { data, error } = await supabase
         .from('friends')
         .select(`
@@ -568,9 +584,36 @@ export const friendService = {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
       
-      return { data: data || [], error };
+      console.log('🔍 getFriends raw result:', { data, error });
+      
+      if (error) {
+        console.error('❌ getFriends error:', error);
+        return { data: [], error };
+      }
+      
+      // Veriyi düzgün formata çevir
+      const formattedData = (data || []).map((friend: any) => {
+        const profile = friend.profiles;
+        console.log('🔍 Processing friend:', { friend, profile });
+        
+        return {
+          id: profile?.id || friend.friend_id,
+          full_name: profile?.full_name || 'Kullanıcı',
+          email: profile?.email || '',
+          phone: profile?.phone || '-',
+          avatar_url: profile?.avatar_url || null,
+          // Orijinal friend kaydı için gerekli alanlar
+          user_id: friend.user_id,
+          friend_id: friend.friend_id,
+          created_at: friend.created_at
+        };
+      });
+      
+      console.log('🔍 getFriends formatted result:', formattedData);
+      
+      return { data: formattedData, error: null };
     } catch (error) {
-      console.error('Error getting friends:', error);
+      console.error('❌ Error getting friends:', error);
       return { data: [], error: null };
     }
   },
@@ -578,6 +621,8 @@ export const friendService = {
   // Gelen arkadaşlık isteklerini getir
   async getIncomingFriendRequests(userId: string) {
     try {
+      console.log('🔍 getIncomingFriendRequests called with userId:', userId);
+      
       const { data, error } = await supabase
         .from('friend_requests')
         .select(`
@@ -593,6 +638,8 @@ export const friendService = {
         .eq('to_user_id', userId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
+      
+      console.log('🔍 Incoming friend requests result:', { data, error });
       
       return { data: data || [], error };
     } catch (error) {
@@ -763,18 +810,55 @@ export const friendService = {
         return { data: null, error: { message: 'Arkadaşlık isteği bulunamadı veya zaten işlenmiş' } };
       }
 
-      // Karşılıklı arkadaşlık kaydı oluştur
-      const { error: mutualError } = await supabase
+      // Önce mevcut arkadaşlık kayıtlarını kontrol et
+      const { data: existingFriendships } = await supabase
         .from('friends')
-        .insert({
+        .select('user_id, friend_id')
+        .or(`and(user_id.eq.${friendship.from_user_id},friend_id.eq.${friendship.to_user_id}),and(user_id.eq.${friendship.to_user_id},friend_id.eq.${friendship.from_user_id})`);
+
+      console.log('🔍 Existing friendships:', existingFriendships);
+
+      // Eksik olan kayıtları oluştur
+      const friendshipData = [];
+      
+      // İlk yön: from_user_id -> to_user_id
+      const existsFirst = existingFriendships?.some(f => 
+        f.user_id === friendship.from_user_id && f.friend_id === friendship.to_user_id
+      );
+      if (!existsFirst) {
+        friendshipData.push({
           user_id: friendship.from_user_id,
           friend_id: friendship.to_user_id,
           created_at: new Date().toISOString(),
         });
+      }
 
-      if (mutualError) {
-        console.warn('Could not create mutual friendship:', mutualError);
-        // Karşılıklı kayıt oluşturulamasa bile ana istek kabul edildi
+      // İkinci yön: to_user_id -> from_user_id
+      const existsSecond = existingFriendships?.some(f => 
+        f.user_id === friendship.to_user_id && f.friend_id === friendship.from_user_id
+      );
+      if (!existsSecond) {
+        friendshipData.push({
+          user_id: friendship.to_user_id,
+          friend_id: friendship.from_user_id,
+          created_at: new Date().toISOString(),
+        });
+      }
+
+      console.log('🔍 Friendship data to insert:', friendshipData);
+
+      // Sadece eksik olan kayıtları ekle
+      if (friendshipData.length > 0) {
+        const { error: mutualError } = await supabase
+          .from('friends')
+          .insert(friendshipData);
+
+        if (mutualError) {
+          console.error('Error creating mutual friendship:', mutualError);
+          return { data: null, error: { message: 'Arkadaşlık kaydı oluşturulurken hata oluştu' } };
+        }
+      } else {
+        console.log('✅ All friendship records already exist, skipping insert');
       }
 
       // Bildirimi okundu işaretle
@@ -824,6 +908,109 @@ export const friendService = {
     }
   },
 
+  // Arkadaşlık isteğine yanıt ver (kabul/reddet)
+  async respondFriendRequest(friendshipId: string, status: 'accepted' | 'declined') {
+    try {
+      console.log('🔍 respondFriendRequest called with:', { friendshipId, status });
+      
+      // Önce isteği bul
+      const { data: request, error: fetchError } = await supabase
+        .from('friend_requests')
+        .select('*')
+        .eq('id', friendshipId)
+        .eq('status', 'pending')
+        .single();
+
+      console.log('🔍 Friend request fetch result:', { request, fetchError });
+
+      if (fetchError || !request) {
+        console.error('❌ Friend request not found or already processed:', { fetchError, request });
+        return { data: null, error: { message: 'Arkadaşlık isteği bulunamadı veya zaten işlenmiş' } };
+      }
+
+      // İsteği güncelle
+      const { data: updatedRequest, error: updateError } = await supabase
+        .from('friend_requests')
+        .update({ 
+          status: status === 'accepted' ? 'accepted' : 'rejected',
+          responded_at: new Date().toISOString()
+        })
+        .eq('id', friendshipId)
+        .select()
+        .single();
+
+      if (updateError || !updatedRequest) {
+        return { data: null, error: { message: 'Arkadaşlık isteği güncellenirken hata oluştu' } };
+      }
+
+      // Eğer kabul edildiyse, friends tablosuna ekle
+      if (status === 'accepted') {
+        // Önce mevcut arkadaşlık kayıtlarını kontrol et
+        const { data: existingFriendships } = await supabase
+          .from('friends')
+          .select('user_id, friend_id')
+          .or(`and(user_id.eq.${request.from_user_id},friend_id.eq.${request.to_user_id}),and(user_id.eq.${request.to_user_id},friend_id.eq.${request.from_user_id})`);
+
+        console.log('🔍 Existing friendships:', existingFriendships);
+
+        // Eksik olan kayıtları oluştur
+        const friendshipData = [];
+        
+        // İlk yön: from_user_id -> to_user_id
+        const existsFirst = existingFriendships?.some(f => 
+          f.user_id === request.from_user_id && f.friend_id === request.to_user_id
+        );
+        if (!existsFirst) {
+          friendshipData.push({
+            user_id: request.from_user_id,
+            friend_id: request.to_user_id,
+            created_at: new Date().toISOString(),
+          });
+        }
+
+        // İkinci yön: to_user_id -> from_user_id
+        const existsSecond = existingFriendships?.some(f => 
+          f.user_id === request.to_user_id && f.friend_id === request.from_user_id
+        );
+        if (!existsSecond) {
+          friendshipData.push({
+            user_id: request.to_user_id,
+            friend_id: request.from_user_id,
+            created_at: new Date().toISOString(),
+          });
+        }
+
+        console.log('🔍 Friendship data to insert:', friendshipData);
+
+        // Sadece eksik olan kayıtları ekle
+        if (friendshipData.length > 0) {
+          const { error: mutualError } = await supabase
+            .from('friends')
+            .insert(friendshipData);
+
+          if (mutualError) {
+            console.error('Error creating mutual friendship:', mutualError);
+            return { data: null, error: { message: 'Arkadaşlık kaydı oluşturulurken hata oluştu' } };
+          }
+        } else {
+          console.log('✅ All friendship records already exist, skipping insert');
+        }
+      }
+
+      // Bildirimi okundu işaretle
+      try {
+        await notificationService.markAsRead(friendshipId);
+      } catch (notificationError) {
+        console.warn('Could not mark notification as read:', notificationError);
+      }
+
+      return { data: updatedRequest, error: null };
+    } catch (error) {
+      console.error('Error responding to friend request:', error);
+      return { data: null, error: { message: 'Arkadaşlık isteğine yanıt verilirken hata oluştu' } };
+    }
+  },
+
   // Arkadaşlığı kaldır
   async removeFriend(userId: string, friendId: string) {
     try {
@@ -851,14 +1038,37 @@ export const friendService = {
     }
   },
 
-  // Kullanıcı arama (arkadaş olmayan kullanıcılar)
+  // Kullanıcı arama (tüm kullanıcılar)
   async searchUsers(userId: string, query: string) {
     try {
-      // Önce mevcut arkadaşlıkları ve istekleri al
+      console.log('🔍 searchUsers called with:', { userId, query });
+      
+      // Tüm kullanıcıları ara (kendisi hariç)
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, phone, avatar_url')
+        .neq('id', userId)
+        .or(`full_name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`)
+        .limit(20);
+
+      console.log('🔍 Search results:', { data, error });
+
+      if (error) {
+        console.error('❌ Search error:', error);
+        return { data: [], error };
+      }
+
+      // Mevcut arkadaşlıkları ve istekleri al
       const { data: friendships } = await supabase
         .from('friends')
         .select('friend_id, user_id')
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`);
+
+      const { data: outgoingRequests } = await supabase
+        .from('friend_requests')
+        .select('to_user_id')
+        .eq('from_user_id', userId)
+        .eq('status', 'pending');
 
       const friendIds = new Set();
       friendships?.forEach(f => {
@@ -866,16 +1076,19 @@ export const friendService = {
         if (f.friend_id === userId) friendIds.add(f.user_id);
       });
 
-      // Kullanıcıları ara (arkadaş olmayanlar)
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, phone, avatar_url')
-        .neq('id', userId)
-        .not('id', 'in', `(${Array.from(friendIds).join(',')})`)
-        .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
-        .limit(20);
+      const pendingIds = new Set();
+      outgoingRequests?.forEach(r => pendingIds.add(r.to_user_id));
 
-      return { data: data || [], error };
+      // Sonuçlara arkadaşlık durumunu ekle
+      const results = (data || []).map(profile => ({
+        ...profile,
+        isFriend: friendIds.has(profile.id),
+        isPending: pendingIds.has(profile.id)
+      }));
+
+      console.log('🔍 Processed results:', results);
+
+      return { data: results, error: null };
     } catch (error) {
       console.error('Error searching users:', error);
       return { data: [], error: null };

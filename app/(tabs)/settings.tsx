@@ -14,6 +14,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -125,41 +126,67 @@ export default function SettingsScreen() {
 
   const handleLogout = () => {
     console.log('🔘 Logout button pressed');
-    Alert.alert(
-      'Çıkış Yap',
-      'Hesabınızdan çıkış yapmak istediğinizden emin misiniz?',
-      [
-        {
-          text: 'İptal',
-          style: 'cancel',
-          onPress: () => console.log('❌ Logout cancelled'),
-        },
-        {
-          text: 'Çıkış Yap',
-          style: 'destructive',
-          onPress: async () => {
-            console.log('🚪 Starting logout process...');
-            try {
-              // SignOut işlemini başlat
-              const result = await signOut();
-              console.log('📤 SignOut result:', result);
-              
-              if (result.error) {
-                console.error('❌ Logout error:', result.error);
-                Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu: ' + result.error.message);
-              } else {
-                console.log('✅ Logout successful - user will be redirected to auth screen automatically');
-                // AuthContext'teki signOut fonksiyonu state'i temizleyecek
-                // index.tsx'teki useEffect bu değişikliği algılayıp auth ekranına yönlendirecek
-              }
-            } catch (error) {
-              console.error('❌ Logout catch error:', error);
-              Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu: ' + String(error));
-            }
+    
+    if (Platform.OS === 'web') {
+      // Web ortamında confirm kullan
+      const shouldLogout = window.confirm('Hesabınızdan çıkış yapmak istediğinizden emin misiniz?');
+      
+      if (shouldLogout) {
+        console.log('🚪 Starting logout process...');
+        performLogout();
+      } else {
+        console.log('❌ Logout cancelled');
+      }
+    } else {
+      // Mobil ortamda Alert.alert kullan
+      Alert.alert(
+        'Çıkış Yap',
+        'Hesabınızdan çıkış yapmak istediğinizden emin misiniz?',
+        [
+          {
+            text: 'İptal',
+            style: 'cancel',
+            onPress: () => console.log('❌ Logout cancelled'),
           },
-        },
-      ]
-    );
+          {
+            text: 'Çıkış Yap',
+            style: 'destructive',
+            onPress: () => {
+              console.log('🚪 Starting logout process...');
+              performLogout();
+            },
+          },
+        ]
+      );
+    }
+  };
+
+  const performLogout = async () => {
+    try {
+      // SignOut işlemini başlat - loading screen otomatik olarak gösterilecek
+      const result = await signOut();
+      console.log('📤 SignOut result:', result);
+      
+      if (result.error) {
+        console.error('❌ Logout error:', result.error);
+        if (Platform.OS === 'web') {
+          alert('Çıkış yapılırken bir hata oluştu: ' + result.error.message);
+        } else {
+          Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu: ' + result.error.message);
+        }
+      } else {
+        console.log('✅ Logout successful - loading screen will show and then redirect to auth screen');
+        // AuthContext'teki signOut fonksiyonu loading state'ini true yapacak
+        // Loading screen gösterilecek ve 1.5 saniye sonra auth ekranına yönlendirilecek
+      }
+    } catch (error) {
+      console.error('❌ Logout catch error:', error);
+      if (Platform.OS === 'web') {
+        alert('Çıkış yapılırken bir hata oluştu: ' + String(error));
+      } else {
+        Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu: ' + String(error));
+      }
+    }
   };
 
 

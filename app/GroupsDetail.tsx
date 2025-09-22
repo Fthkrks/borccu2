@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, FlatList, TextInput, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, FlatList, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../components/buton';
 import { useAuth } from '../contexts/AuthContext';
-import { groupService, groupMemberService, friendService } from '../services/api';
-import { Ionicons } from '@expo/vector-icons';
+import { friendService, groupMemberService, groupService } from '../services/api';
+import { RootStackParamList } from '../types/navigation';
 
 type GroupsDetailRouteProp = RouteProp<RootStackParamList, 'GroupsDetail'>;
 
@@ -60,22 +60,25 @@ export default function GroupsDetail() {
     loadGroupDetails();
   }, [groupId, user]);
 
-  // Load friends for member selection
-  useEffect(() => {
-    const loadFriends = async () => {
-      if (!user) return;
-      const { data } = await friendService.getFriends(user.id);
-      const mapped: FriendItem[] = (data || []).map((f: any) => ({
-        id: f.id,
-        name: f.full_name || f.email || 'Kullanıcı',
-        phone: f.phone || '-',
-        avatar: '👤',
-        email: f.email,
-      }));
-      setFriends(mapped);
-    };
-    loadFriends();
-  }, [user]);
+  // Load friends for member selection - sayfa her görüntülendiğinde yenile
+  useFocusEffect(
+    useCallback(() => {
+      const loadFriends = async () => {
+        if (!user) return;
+        console.log('🔄 Refreshing friends list in GroupsDetail screen');
+        const { data } = await friendService.getFriends(user.id);
+        const mapped: FriendItem[] = (data || []).map((f: any) => ({
+          id: f.id,
+          name: f.full_name || f.email || 'Kullanıcı',
+          phone: f.phone || '-',
+          avatar: '👤',
+          email: f.email,
+        }));
+        setFriends(mapped);
+      };
+      loadFriends();
+    }, [user])
+  );
 
   // Filter friends who are not already group members
   const filteredContacts = friends.filter(contact => {

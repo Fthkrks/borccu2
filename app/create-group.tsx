@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
@@ -34,21 +34,25 @@ export default function CreateGroupScreen() {
   const [loading, setLoading] = useState(false);
   const [friends, setFriends] = useState<FriendItem[]>([]);
 
-  React.useEffect(() => {
-    const loadFriends = async () => {
-      if (!user) return;
-      const { data } = await friendService.getFriends(user.id);
-      const mapped: FriendItem[] = (data || []).map((f: any) => ({
-        id: f.id,
-        name: f.full_name || f.email || 'Kullanıcı',
-        phone: f.phone || '-',
-        avatar: '👤',
-        email: f.email,
-      }));
-      setFriends(mapped);
-    };
-    loadFriends();
-  }, [user]);
+  // Arkadaş listesini yükle - sayfa her görüntülendiğinde yenile
+  useFocusEffect(
+    useCallback(() => {
+      const loadFriends = async () => {
+        if (!user) return;
+        console.log('🔄 Refreshing friends list in create-group screen');
+        const { data } = await friendService.getFriends(user.id);
+        const mapped: FriendItem[] = (data || []).map((f: any) => ({
+          id: f.id,
+          name: f.full_name || f.email || 'Kullanıcı',
+          phone: f.phone || '-',
+          avatar: '👤',
+          email: f.email,
+        }));
+        setFriends(mapped);
+      };
+      loadFriends();
+    }, [user])
+  );
 
   // AddDebtScreen'deki kişi arama davranışıyla aynı
   const filteredContacts = friends.filter(contact => {

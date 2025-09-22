@@ -328,16 +328,10 @@ export default function HomeScreen() {
               style={styles.debtItem}
               onPress={() => {
                 console.log('Navigating to DebtDetail with debt:', debt);
-                // TODO: DebtDetail sayfası oluşturulacak, şimdilik add-debt'e yönlendir
                 router.push({
-                  pathname: '/add-debt',
+                  pathname: '/debt-detail',
                   params: {
-                    editMode: 'true',
-                    debtId: debt.id,
-                    name: debt.name,
-                    type: debt.type,
-                    amount: debt.amount.toString(),
-                    description: debt.description || ''
+                    debtId: debt.id
                   }
                 });
               }}

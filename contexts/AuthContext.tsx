@@ -269,6 +269,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
+      console.log('🚪 Setting loading to true...');
       setLoading(true);
       console.log('🚪 Attempting sign out...');
       
@@ -276,6 +277,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (error) {
         console.error('❌ Sign out error:', error);
+        setLoading(false);
         return { error };
       }
       
@@ -283,16 +285,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('✅ Sign out successful, clearing state...');
       setSession(null);
       setUser(null);
+      console.log('🧹 State cleared - session:', null, 'user:', null);
       
-      // State değişikliği ile index.tsx'teki useEffect tetiklenecek
-      console.log('🔄 State cleared, redirect should happen automatically');
+      // Loading state'i biraz daha uzun tut ki kullanıcı loading screen'i görebilsin
+      setTimeout(() => {
+        console.log('⏰ Timeout completed, setting loading to false...');
+        setLoading(false);
+        console.log('🔄 Loading completed, redirect should happen automatically');
+      }, 1500); // 1.5 saniye loading göster
       
       return { error: null };
     } catch (error) {
       console.error('❌ Sign out catch error:', error);
-      return { error };
-    } finally {
       setLoading(false);
+      return { error };
     }
   };
 

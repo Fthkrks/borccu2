@@ -126,8 +126,12 @@ export default function NotificationScreen() {
   const handleAcceptRequest = async (requestId: string) => {
     if (!user) return;
     
+    console.log('🔍 handleAcceptRequest called with:', { requestId, userId: user.id });
+    
     try {
       const { error } = await friendService.respondFriendRequest(requestId, 'accepted');
+      console.log('🔍 respondFriendRequest result:', { error });
+      
       if (error) {
         // Check if it's a duplicate key error
         if ((error as any).code === '23505') {
@@ -140,7 +144,7 @@ export default function NotificationScreen() {
       }
       
       // Reload friend requests regardless of success/failure
-      const { data, error: reloadError } = await friendService.getFriendRequests(user.id);
+      const { data, error: reloadError } = await friendService.getIncomingFriendRequests(user.id);
       if (reloadError) {
         console.error('Error reloading friend requests:', reloadError);
       } else {

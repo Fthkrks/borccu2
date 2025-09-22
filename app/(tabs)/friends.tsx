@@ -50,6 +50,8 @@ export default function FriendScreen() {
         const friendIds = (friends || []).map((f: any) => f.profiles?.id || f.friend_id);
         const pendingIds = (outgoingRequests || []).map((r: any) => r.profiles?.id || r.friend_id);
         
+        console.log('🔍 Friends data:', { friends, friendIds, pendingIds });
+        
         setExistingFriends(friendIds);
         setPendingRequests(pendingIds);
 
@@ -63,10 +65,11 @@ export default function FriendScreen() {
           email: profile.email,
           phone: profile.phone || '-',
           avatar: '👤',
-          isAdded: false,
+          isAdded: friendIds.includes(profile.id), // Arkadaş durumunu kontrol et
           isPending: pendingIds.includes(profile.id)
         }));
 
+        console.log('🔍 Suggested users mapped:', suggestedUsers);
         setSuggestedFriends(suggestedUsers);
       } catch (error) {
         console.error('Error loading suggested friends:', error);
@@ -89,13 +92,9 @@ export default function FriendScreen() {
 
       setSearchLoading(true);
       try {
-        // Use the new searchUsers function that excludes friends
+        // Use the new searchUsers function that includes all users with friendship status
         const { data: profiles, error } = await friendService.searchUsers(user.id, searchQuery);
         if (error) throw error;
-
-        // Load outgoing friend requests to check pending status
-        const { data: outgoingRequests } = await friendService.getOutgoingFriendRequests(user.id);
-        const pendingIds = (outgoingRequests || []).map((r: any) => r.profiles?.id || r.friend_id);
 
         const results = (profiles || []).map((profile: any) => ({
           id: profile.id,
@@ -103,8 +102,8 @@ export default function FriendScreen() {
           email: profile.email,
           phone: profile.phone || '-',
           avatar: '👤',
-          isAdded: false, // searchUsers already excludes friends
-          isPending: pendingIds.includes(profile.id)
+          isAdded: profile.isFriend || false, // Arkadaş durumu
+          isPending: profile.isPending || false // Bekleyen istek durumu
         }));
 
         setSearchResults(results);
