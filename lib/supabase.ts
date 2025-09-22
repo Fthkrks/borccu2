@@ -1,31 +1,45 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 
 // Platform-specific storage wrapper
 const getStorage = () => {
-  if (typeof window !== 'undefined') {
+  // Web platform kontrolü
+  if (Platform.OS === 'web') {
     // Web platformu için localStorage kullan
     return {
       getItem: async (key: string) => {
         try {
-          return localStorage.getItem(key);
+          if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            const item = localStorage.getItem(key);
+            return Promise.resolve(item);
+          }
+          return Promise.resolve(null);
         } catch (error) {
           console.error('localStorage getItem error:', error);
-          return null;
+          return Promise.resolve(null);
         }
       },
       setItem: async (key: string, value: string) => {
         try {
-          localStorage.setItem(key, value);
+          if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            localStorage.setItem(key, value);
+          }
+          return Promise.resolve();
         } catch (error) {
           console.error('localStorage setItem error:', error);
+          return Promise.resolve();
         }
       },
       removeItem: async (key: string) => {
         try {
-          localStorage.removeItem(key);
+          if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            localStorage.removeItem(key);
+          }
+          return Promise.resolve();
         } catch (error) {
           console.error('localStorage removeItem error:', error);
+          return Promise.resolve();
         }
       },
     };

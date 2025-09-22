@@ -1,25 +1,25 @@
 import {
-    Bell,
-    ChevronRight,
-    CreditCard,
-    CreditCard as Edit,
-    CircleHelp as HelpCircle,
-    LogOut,
-    Mail,
-    Phone,
-    Settings,
-    Shield,
-    User
+  Bell,
+  ChevronRight,
+  CreditCard,
+  CreditCard as Edit,
+  CircleHelp as HelpCircle,
+  LogOut,
+  Mail,
+  Phone,
+  Settings,
+  Shield,
+  User
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
@@ -140,6 +140,7 @@ export default function SettingsScreen() {
           onPress: async () => {
             console.log('🚪 Starting logout process...');
             try {
+              // SignOut işlemini başlat
               const result = await signOut();
               console.log('📤 SignOut result:', result);
               
@@ -147,12 +148,13 @@ export default function SettingsScreen() {
                 console.error('❌ Logout error:', result.error);
                 Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu: ' + result.error.message);
               } else {
-                console.log('✅ Logout successful - should redirect to auth screen');
-                Alert.alert('Başarılı', 'Çıkış yapıldı');
+                console.log('✅ Logout successful - user will be redirected to auth screen automatically');
+                // AuthContext'teki signOut fonksiyonu state'i temizleyecek
+                // index.tsx'teki useEffect bu değişikliği algılayıp auth ekranına yönlendirecek
               }
             } catch (error) {
               console.error('❌ Logout catch error:', error);
-              Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu: ' + error);
+              Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu: ' + String(error));
             }
           },
         },
