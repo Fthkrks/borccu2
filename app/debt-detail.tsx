@@ -3,10 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../components/buton';
+import { useTheme } from '../contexts/ThemeContext';
 import { debtService } from '../services/api';
 
 export default function DebtDetailScreen() {
   const { debtId } = useLocalSearchParams();
+  const { colors, isDark } = useTheme();
   const [debt, setDebt] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
@@ -40,16 +42,16 @@ export default function DebtDetailScreen() {
   
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.loadingText}>Yükleniyor...</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Yükleniyor...</Text>
       </View>
     );
   }
-  
+
   if (!debt) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Hata: Borç bilgisi bulunamadı</Text>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.error }]}>Hata: Borç bilgisi bulunamadı</Text>
         <Button
           title="Geri Dön"
           backgroundColor="bg-blue-500"
@@ -67,9 +69,9 @@ export default function DebtDetailScreen() {
   const otherParty = debt.other_party || (isOwed ? debt.creditor : debt.debtor);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <SafeAreaView style={styles.headerContainer}>
+      <SafeAreaView style={[styles.headerContainer, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.backButton}>←</Text>

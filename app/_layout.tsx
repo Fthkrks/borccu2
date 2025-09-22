@@ -7,6 +7,7 @@ import 'react-native-reanimated';
 import '../global.css';
 
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider as CustomThemeProvider } from '@/contexts/ThemeContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 function RootNavigator() {
@@ -86,8 +87,10 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <CustomThemeProvider>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </CustomThemeProvider>
   );
 }

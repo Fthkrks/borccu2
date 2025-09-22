@@ -6,23 +6,30 @@ import '../../global.css';
 
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function TabLayout() {
+  const { colors, isDark } = useTheme();
+  
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#101828',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarActiveTintColor: colors.text,
+        tabBarInactiveTintColor: colors.textTertiary,
+        tabBarStyle: {
+          backgroundColor: colors.background,
+          borderTopColor: colors.border,
+          ...Platform.select({
+            ios: {
+              // Use a transparent background on iOS to show the blur effect
+              position: 'absolute',
+            },
+            default: {},
+          }),
+        },
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
       }}>
       <Tabs.Screen
         name="index"

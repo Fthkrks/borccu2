@@ -6,11 +6,13 @@ import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../../components/buton';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import '../../global.css';
 import { groupService } from '../../services/api';
 
 export default function GroupsScreen() {
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -57,10 +59,10 @@ export default function GroupsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Gruplar</Text>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Gruplar</Text>
         <Button
           title="Yeni Grup"
           backgroundColor="bg-blue-600"
@@ -85,14 +87,14 @@ router.push('/create-group');
         <View style={styles.groupsList}>
           {loading ? (
             <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Yükleniyor...</Text>
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Yükleniyor...</Text>
             </View>
           ) : groups.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyTitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
                 Henüz grup oluşturmadınız
               </Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                 İlk grubunuzu oluşturun ve{'\n'}
                 borçları kolayca takip edin
               </Text>
@@ -107,7 +109,7 @@ router.push('/create-group');
             groups.map((group, index) => (
               <TouchableOpacity
                 key={group.id}
-                style={[styles.groupCard, index === groups.length - 1 && styles.groupCardLast]}
+                style={[styles.groupCard, { backgroundColor: colors.card }, index === groups.length - 1 && styles.groupCardLast]}
                 onPress={() => {
                   // Grup detayına git
                   console.log('Group pressed:', group.name);
@@ -122,23 +124,23 @@ router.push('/create-group');
                 {/* Group Header */}
                 <View style={styles.groupHeader}>
                   <View style={styles.groupHeaderLeft}>
-                    <View style={styles.groupAvatar}>
-                      <Ionicons name="people" size={20} color="#3B82F6" />
+                    <View style={[styles.groupAvatar, { backgroundColor: colors.primary }]}>
+                      <Ionicons name="people" size={20} color={colors.primaryText} />
                     </View>
                     <View>
-                      <Text style={styles.groupName}>
+                      <Text style={[styles.groupName, { color: colors.text }]}>
                         {group.name}
                       </Text>
-                      <Text style={styles.groupMemberCount}>{(group.group_members?.length || 0)} üye</Text>
+                      <Text style={[styles.groupMemberCount, { color: colors.textSecondary }]}>{(group.group_members?.length || 0)} üye</Text>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                  <Ionicons name="chevron-forward" size={20} color={colors.iconSecondary} />
                 </View>
 
                 {/* Group Stats */}
-                <View style={styles.groupStats}>
+                <View style={[styles.groupStats, { backgroundColor: colors.divider }]}>
                   {!!group.description && (
-                    <Text style={styles.groupDescription}>{group.description}</Text>
+                    <Text style={[styles.groupDescription, { color: colors.textSecondary }]}>{group.description}</Text>
                   )}
                   
                   {(() => {
@@ -153,18 +155,18 @@ router.push('/create-group');
                     return (
                       <View style={styles.statsRow}>
                         <View style={styles.statItem}>
-                          <Text style={styles.statLabel}>Toplam Tutar</Text>
-                          <Text style={styles.statValueTotal}>₺{totalAmount.toFixed(2)}</Text>
+                          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Toplam Tutar</Text>
+                          <Text style={[styles.statValueTotal, { color: colors.text }]}>₺{totalAmount.toFixed(2)}</Text>
                         </View>
                         
                         <View style={[styles.statItem, styles.statItemMiddle]}>
-                          <Text style={styles.statLabel}>Ödenen</Text>
-                          <Text style={styles.statValuePaid}>₺{paidAmount.toFixed(2)}</Text>
+                          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Ödenen</Text>
+                          <Text style={[styles.statValuePaid, { color: colors.success }]}>₺{paidAmount.toFixed(2)}</Text>
                         </View>
                         
                         <View style={styles.statItem}>
-                          <Text style={styles.statLabel}>Bekleyen</Text>
-                          <Text style={styles.statValuePending}>₺{pendingAmount.toFixed(2)}</Text>
+                          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Bekleyen</Text>
+                          <Text style={[styles.statValuePending, { color: colors.warning }]}>₺{pendingAmount.toFixed(2)}</Text>
                         </View>
                       </View>
                     );
@@ -182,12 +184,12 @@ router.push('/create-group');
 
                       return (
                         <>
-                          <View style={styles.progressBarContainer}>
+                          <View style={[styles.progressBarContainer, { backgroundColor: colors.divider }]}>
                             <View 
-                              style={[styles.progressBar, { width: `${completionPercentage}%` }]}
+                              style={[styles.progressBar, { width: `${completionPercentage}%`, backgroundColor: colors.success }]}
                             />
                           </View>
-                          <Text style={styles.progressText}>
+                          <Text style={[styles.progressText, { color: colors.textSecondary }]}>
                             {completionPercentage}% tamamlandı
                           </Text>
                         </>
@@ -207,7 +209,6 @@ router.push('/create-group');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
   },
   header: {
     flexDirection: 'row',
@@ -217,13 +218,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingTop: 48,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-    backgroundColor: '#ffffff',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
   },
   scrollView: {
     flex: 1,
@@ -239,37 +237,30 @@ const styles = StyleSheet.create({
   loadingContainer: {
     paddingVertical: 40,
     alignItems: 'center',
-    backgroundColor: '#ffffff',
   },
   loadingText: {
     fontSize: 16,
-    color: '#6b7280',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 80,
-    backgroundColor: '#ffffff',
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1f2937',
     textAlign: 'center',
     marginBottom: 16,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#6b7280',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 32,
   },
   groupCard: {
-    backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -290,7 +281,6 @@ const styles = StyleSheet.create({
   groupAvatar: {
     width: 40,
     height: 40,
-    backgroundColor: '#dbeafe',
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -299,20 +289,16 @@ const styles = StyleSheet.create({
   groupName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
   },
   groupMemberCount: {
     fontSize: 14,
-    color: '#6b7280',
   },
   groupStats: {
-    backgroundColor: '#f9fafb',
     borderRadius: 8,
     padding: 12,
   },
   groupDescription: {
     fontSize: 14,
-    color: '#6b7280',
     marginBottom: 8,
   },
   statsRow: {
@@ -328,23 +314,19 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: '#6b7280',
     marginBottom: 4,
   },
   statValueTotal: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
   },
   statValuePaid: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#059669',
   },
   statValuePending: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#dc2626',
   },
   progressSection: {
     marginTop: 12,
@@ -352,17 +334,14 @@ const styles = StyleSheet.create({
   progressBarContainer: {
     width: '100%',
     height: 8,
-    backgroundColor: '#e5e7eb',
     borderRadius: 4,
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#10b981',
     borderRadius: 4,
   },
   progressText: {
     fontSize: 12,
-    color: '#6b7280',
     marginTop: 4,
     textAlign: 'center',
   },

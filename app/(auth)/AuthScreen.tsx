@@ -5,6 +5,7 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, Te
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../../components/buton';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import '../../global.css';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 
@@ -130,6 +131,7 @@ export default function AuthScreen() {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, user, loading: authLoading } = useAuth();
+  const { colors, isDark } = useTheme();
 
   // Kullanıcı zaten giriş yapmışsa ana sayfaya yönlendir
   useEffect(() => {
@@ -552,7 +554,7 @@ export default function AuthScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Supabase Test Component - Sadece development'ta göster */}
       {__DEV__ && !isSupabaseConfigured && <SupabaseTestComponent />}
       
@@ -572,12 +574,12 @@ export default function AuthScreen() {
         </View>
 
         {/* Title */}
-        <Text style={styles.title}>
+        <Text style={[styles.title, { color: colors.text }]}>
           Ortak harcamaları{'\n'}kolayca takip edin
         </Text>
 
         {/* Subtitle */}
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Faturaları kolayca bölün, ortak harcamaları takip edin ve arkadaşlarınızla hesaplaşın. Artık garip para konuşmaları yok.
         </Text>
       </View>
@@ -630,10 +632,10 @@ export default function AuthScreen() {
         )}
 
         {/* Terms and Privacy */}
-        <Text style={styles.termsText}>
+        <Text style={[styles.termsText, { color: colors.textSecondary }]}>
           Devam ederek{' '}
-          <Text style={styles.termsLink}>Hizmet Şartlarımızı</Text> ve{'\n'}
-          <Text style={styles.termsLink}>Gizlilik Politikamızı</Text> kabul etmiş olursunuz
+          <Text style={[styles.termsLink, { color: colors.primary }]}>Hizmet Şartlarımızı</Text> ve{'\n'}
+          <Text style={[styles.termsLink, { color: colors.primary }]}>Gizlilik Politikamızı</Text> kabul etmiş olursunuz
         </Text>
       </View>
     </SafeAreaView>

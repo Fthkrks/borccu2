@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import {
   Bell,
   ChevronRight,
@@ -6,9 +7,11 @@ import {
   CircleHelp as HelpCircle,
   LogOut,
   Mail,
+  Moon,
   Phone,
   Settings,
   Shield,
+  Sun,
   User
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
@@ -24,6 +27,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import '../../global.css';
 import { profileService } from '../../services/api';
 
@@ -45,6 +49,7 @@ interface MenuItem {
 
 export default function SettingsScreen() {
   const { signOut, user } = useAuth();
+  const { themeMode, setThemeMode, colors, isDark } = useTheme();
   
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: 'Kullanıcı',
@@ -58,32 +63,32 @@ export default function SettingsScreen() {
       id: '1',
       title: 'Account Settings',
       subtitle: 'Manage your account details',
-      icon: <Settings size={24} color="#6B7280" />,
-      color: '#F3F4F6',
+      icon: <Settings size={24} color={colors.icon} />,
+      color: colors.divider,
       action: 'account',
     },
     {
       id: '2',
       title: 'Notifications',
       subtitle: 'Manage notification preferences',
-      icon: <Bell size={24} color="#3B82F6" />,
-      color: '#DBEAFE',
+      icon: <Bell size={24} color={colors.primary} />,
+      color: isDark ? '#1E3A8A' : '#DBEAFE',
       action: 'notifications',
     },
     {
       id: '3',
       title: 'Payment Methods',
       subtitle: 'Add or manage payment methods',
-      icon: <CreditCard size={24} color="#10B981" />,
-      color: '#D1FAE5',
+      icon: <CreditCard size={24} color={colors.success} />,
+      color: isDark ? '#064E3B' : '#D1FAE5',
       action: 'payments',
     },
     {
       id: '4',
       title: 'Privacy & Security',
       subtitle: 'Control your privacy settings',
-      icon: <Shield size={24} color="#F59E0B" />,
-      color: '#FEF3C7',
+      icon: <Shield size={24} color={colors.warning} />,
+      color: isDark ? '#92400E' : '#FEF3C7',
       action: 'security',
     },
     {
@@ -91,10 +96,35 @@ export default function SettingsScreen() {
       title: 'Help & Support',
       subtitle: 'Get help or contact support',
       icon: <HelpCircle size={24} color="#8B5CF6" />,
-      color: '#EDE9FE',
+      color: isDark ? '#581C87' : '#EDE9FE',
       action: 'help',
     },
   ]);
+
+  const getThemeIcon = () => {
+    if (themeMode === 'light') return <Sun size={24} color={colors.warning} />;
+    if (themeMode === 'dark') return <Moon size={24} color={colors.primary} />;
+    return <Settings size={24} color={colors.icon} />; // system mode
+  };
+
+  const getThemeTitle = () => {
+    if (themeMode === 'light') return 'Light Theme';
+    if (themeMode === 'dark') return 'Dark Theme';
+    return 'System Theme';
+  };
+
+  const getThemeSubtitle = () => {
+    if (themeMode === 'light') return 'Always use light theme';
+    if (themeMode === 'dark') return 'Always use dark theme';
+    return 'Follow system settings';
+  };
+
+  const handleThemeToggle = () => {
+    const modes: Array<'light' | 'dark' | 'system'> = ['system', 'light', 'dark'];
+    const currentIndex = modes.indexOf(themeMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    setThemeMode(modes[nextIndex]);
+  };
 
   // Load user profile data
   useEffect(() => {
@@ -134,6 +164,7 @@ export default function SettingsScreen() {
       if (shouldLogout) {
         console.log('🚪 Starting logout process...');
         performLogout();
+        router.replace('/(auth)/AuthScreen');
       } else {
         console.log('❌ Logout cancelled');
       }
@@ -154,6 +185,7 @@ export default function SettingsScreen() {
             onPress: () => {
               console.log('🚪 Starting logout process...');
               performLogout();
+              router.replace('/(auth)/AuthScreen');
             },
           },
         ]
@@ -191,77 +223,94 @@ export default function SettingsScreen() {
 
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.background} />
       
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity style={styles.editButton}>
-            <Edit size={20} color="#6B7280" />
+        <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
+          <TouchableOpacity style={[styles.editButton, { backgroundColor: colors.divider }]}>
+            <Edit size={20} color={colors.icon} />
           </TouchableOpacity>
         </View>
 
         {/* User Profile Card */}
-        <View style={styles.profileCard}>
+        <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
           <View style={styles.profileHeader}>
             <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <User size={40} color="#6B7280" />
+              <View style={[styles.avatar, { backgroundColor: colors.divider }]}>
+                <User size={40} color={colors.icon} />
               </View>
-              <View style={styles.onlineIndicator} />
+              <View style={[styles.onlineIndicator, { backgroundColor: colors.success }]} />
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.userName}>{userProfile.name}</Text>
-              <Text style={styles.memberSince}>Member since {userProfile.memberSince}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>{userProfile.name}</Text>
+              <Text style={[styles.memberSince, { color: colors.textSecondary }]}>Member since {userProfile.memberSince}</Text>
             </View>
           </View>
 
 
           {/* Contact Information */}
           <View style={styles.contactSection}>
-            <Text style={styles.contactTitle}>Contact Information</Text>
+            <Text style={[styles.contactTitle, { color: colors.text }]}>Contact Information</Text>
             <View style={styles.contactItem}>
-              <Mail size={16} color="#6B7280" />
-              <Text style={styles.contactText}>{userProfile.email}</Text>
+              <Mail size={16} color={colors.icon} />
+              <Text style={[styles.contactText, { color: colors.textSecondary }]}>{userProfile.email}</Text>
             </View>
             <View style={styles.contactItem}>
-              <Phone size={16} color="#6B7280" />
-              <Text style={styles.contactText}>{userProfile.phone}</Text>
+              <Phone size={16} color={colors.icon} />
+              <Text style={[styles.contactText, { color: colors.textSecondary }]}>{userProfile.phone}</Text>
             </View>
           </View>
         </View>
 
+        {/* Theme Toggle */}
+        <View style={styles.menuSection}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
+          <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.card }]} onPress={handleThemeToggle}>
+            <View style={styles.menuLeft}>
+              <View style={[styles.menuIconContainer, { backgroundColor: themeMode === 'light' ? (isDark ? '#92400E' : '#FEF3C7') : themeMode === 'dark' ? (isDark ? '#1E3A8A' : '#DBEAFE') : colors.divider }]}>
+                {getThemeIcon()}
+              </View>
+              <View style={styles.menuContent}>
+                <Text style={[styles.menuTitle, { color: colors.text }]}>{getThemeTitle()}</Text>
+                <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>{getThemeSubtitle()}</Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color={colors.iconSecondary} />
+          </TouchableOpacity>
+        </View>
+
         {/* Menu Items */}
         <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>Settings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Settings</Text>
           {menuItems.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.menuItem}>
+            <TouchableOpacity key={item.id} style={[styles.menuItem, { backgroundColor: colors.card }]}>
               <View style={styles.menuLeft}>
                 <View style={[styles.menuIconContainer, { backgroundColor: item.color }]}>
                   {item.icon}
                 </View>
                 <View style={styles.menuContent}>
-                  <Text style={styles.menuTitle}>{item.title}</Text>
+                  <Text style={[styles.menuTitle, { color: colors.text }]}>{item.title}</Text>
                   {item.subtitle && (
-                    <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+                    <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
                   )}
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" />
+              <ChevronRight size={20} color={colors.iconSecondary} />
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <LogOut size={20} color="#EF4444" />
-          <Text style={styles.logoutText}>Logout</Text>
+        <TouchableOpacity style={[styles.logoutButton, { backgroundColor: colors.card, borderColor: isDark ? '#7F1D1D' : '#FEE2E2' }]} onPress={handleLogout}>
+          <LogOut size={20} color={colors.error} />
+          <Text style={[styles.logoutText, { color: colors.error }]}>Logout</Text>
         </TouchableOpacity>
 
         {/* App Version */}
-        <Text style={styles.appVersion}>Borccu v1.0.0</Text>
+        <Text style={[styles.appVersion, { color: colors.textTertiary }]}>Borccu v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -270,7 +319,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   header: {
     flexDirection: 'row',
@@ -278,22 +326,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 20,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#111827',
   },
   editButton: {
-    backgroundColor: '#F3F4F6',
     borderRadius: 8,
     padding: 8,
   },
   profileCard: {
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     marginTop: 16,
     borderRadius: 16,
@@ -317,7 +360,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -328,7 +370,6 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#10B981',
     borderWidth: 3,
     borderColor: '#FFFFFF',
   },
@@ -338,12 +379,10 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
     marginBottom: 4,
   },
   memberSince: {
     fontSize: 14,
-    color: '#6B7280',
     marginBottom: 8,
   },
   contactSection: {
@@ -352,7 +391,6 @@ const styles = StyleSheet.create({
   contactTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
     marginBottom: 12,
   },
   contactItem: {
@@ -363,7 +401,6 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: 14,
-    color: '#6B7280',
   },
   menuSection: {
     paddingHorizontal: 20,
@@ -372,11 +409,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#111827',
     marginBottom: 16,
   },
   menuItem: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
@@ -408,15 +443,12 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
     marginBottom: 2,
   },
   menuSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
   },
   logoutButton: {
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     marginTop: 24,
     borderRadius: 12,
@@ -426,17 +458,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#FEE2E2',
   },
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#EF4444',
   },
   appVersion: {
     textAlign: 'center',
     fontSize: 12,
-    color: '#9CA3AF',
     marginTop: 24,
     marginBottom: 24,
   },

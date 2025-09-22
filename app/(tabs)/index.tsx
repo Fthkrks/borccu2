@@ -4,11 +4,13 @@ import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { debtService, friendService, groupService } from '../../services/api';
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
   
   // State
   const [hasData, setHasData] = useState(false);
@@ -160,20 +162,20 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.surface }]}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.background }]}>
           <View style={styles.headerSpacer}></View>
-          <Text style={styles.headerTitle}>Borçlar</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Borçlar</Text>
           <View style={styles.headerSpacer}></View>
         </View>
 
         {/* Loading State */}
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
             Yükleniyor...
           </Text>
-          <Text style={styles.loadingSubText}>
+          <Text style={[styles.loadingSubText, { color: colors.textTertiary }]}>
             Borç bilgileriniz getiriliyor
           </Text>
         </View>
@@ -183,25 +185,25 @@ export default function HomeScreen() {
 
   if (!hasData) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.surface }]}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.background }]}>
         <TouchableOpacity onPress={() => router.push('/notification')} style={styles.notificationButton}>
-          <Ionicons name="notifications-outline" size={24} color="#374151" />
+          <Ionicons name="notifications-outline" size={24} color={colors.icon} />
           {hasNotifications && (
-            <View style={styles.notificationBadge}></View>
+            <View style={[styles.notificationBadge, { backgroundColor: colors.primary }]}></View>
           )}
         </TouchableOpacity>
-          <Text style={styles.headerTitle}>Borçlar</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Borçlar</Text>
           <View style={styles.headerSpacer}></View>
         </View>
 
         {/* Empty State */}
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>
             Henüz borç kaydınız yok
           </Text>
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             Ne borçlusunuz ne de kimseye borç verdiniz.{'\n'}
             İlk harcamanızı ekleyin!
           </Text>
@@ -209,29 +211,29 @@ export default function HomeScreen() {
 
         {/* Floating Action Button */}
         <TouchableOpacity 
-          style={styles.fab}
+          style={[styles.fab, { backgroundColor: colors.primary }]}
           onPress={() => {
             console.log('Add new debt pressed');
             router.push('/add-debt');
           }}
         >
-          <Text style={styles.fabText}>+</Text>
+          <Text style={[styles.fabText, { color: colors.primaryText }]}>+</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
         <TouchableOpacity onPress={() => router.push('/notification')} style={styles.notificationButton}>
-          <Ionicons name="notifications-outline" size={24} color="#374151" />
+          <Ionicons name="notifications-outline" size={24} color={colors.icon} />
           {hasNotifications && (
             <View style={styles.notificationBadge}></View>
           )}
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Borçlar</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Borçlar</Text>
         <View style={styles.headerSpacer}></View>
       </View>
 
@@ -244,17 +246,17 @@ export default function HomeScreen() {
         <View style={styles.summaryContainer}>
           <View style={styles.summaryRow}>
             {/* You'll receive card */}
-            <View style={[styles.summaryCard, styles.summaryCardReceive]}>
-              <Text style={[styles.summaryLabel, styles.summaryLabelReceive]}>Alacağınız</Text>
-              <Text style={[styles.summaryAmount, styles.summaryAmountReceive]}>
+            <View style={[styles.summaryCard, { backgroundColor: isDark ? '#064E3B' : '#F0FDF4', borderColor: isDark ? '#059669' : '#BBF7D0' }]}>
+              <Text style={[styles.summaryLabel, { color: colors.success }]}>Alacağınız</Text>
+              <Text style={[styles.summaryAmount, { color: colors.success }]}>
                 ₺{debtsData.youwillreceive}
               </Text>
             </View>
 
             {/* You'll give card */}
-            <View style={[styles.summaryCard, styles.summaryCardGive]}>
-              <Text style={[styles.summaryLabel, styles.summaryLabelGive]}>Vereceğiniz</Text>
-              <Text style={[styles.summaryAmount, styles.summaryAmountGive]}>
+            <View style={[styles.summaryCard, { backgroundColor: isDark ? '#7F1D1D' : '#FEF2F2', borderColor: isDark ? '#DC2626' : '#FECACA' }]}>
+              <Text style={[styles.summaryLabel, { color: colors.error }]}>Vereceğiniz</Text>
+              <Text style={[styles.summaryAmount, { color: colors.error }]}>
                 ₺{debtsData.youwillgive}
               </Text>
             </View>
@@ -264,12 +266,12 @@ export default function HomeScreen() {
         {/* All debts section */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Tüm Borçlar</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Tüm Borçlar</Text>
             <TouchableOpacity 
               onPress={() => setShowDebtFilter(!showDebtFilter)}
               style={styles.filterButton}
             >
-              <Ionicons name="search-outline" size={20} color="#4B5563" />
+              <Ionicons name="search-outline" size={20} color={colors.icon} />
             </TouchableOpacity>
           </View>
 
@@ -278,25 +280,25 @@ export default function HomeScreen() {
             <View style={styles.filterRow}>
               <TouchableOpacity 
                 onPress={() => setDebtTypeFilter('all')}
-                style={[styles.filterButtonAll, debtTypeFilter === 'all' ? styles.filterButtonActive : styles.filterButtonInactive]}
+                style={[styles.filterButtonAll, { backgroundColor: debtTypeFilter === 'all' ? colors.primary : colors.card, borderColor: debtTypeFilter === 'all' ? colors.primary : colors.border }]}
               >
-                <Text style={debtTypeFilter === 'all' ? styles.filterTextActive : styles.filterTextInactive}>
+                <Text style={[styles.filterText, { color: debtTypeFilter === 'all' ? colors.primaryText : colors.text }]}>
                   Tümü
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={() => setDebtTypeFilter('owe')}
-                style={[styles.filterButtonAll, debtTypeFilter === 'owe' ? styles.filterButtonOweActive : styles.filterButtonInactive]}
+                style={[styles.filterButtonAll, { backgroundColor: debtTypeFilter === 'owe' ? colors.success : colors.card, borderColor: debtTypeFilter === 'owe' ? colors.success : colors.border }]}
               >
-                <Text style={debtTypeFilter === 'owe' ? styles.filterTextActive : styles.filterTextInactive}>
+                <Text style={[styles.filterText, { color: debtTypeFilter === 'owe' ? colors.primaryText : colors.text }]}>
                   💰 Alacak
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={() => setDebtTypeFilter('owed')}
-                style={[styles.filterButtonAll, debtTypeFilter === 'owed' ? styles.filterButtonOwedActive : styles.filterButtonInactive]}
+                style={[styles.filterButtonAll, { backgroundColor: debtTypeFilter === 'owed' ? colors.error : colors.card, borderColor: debtTypeFilter === 'owed' ? colors.error : colors.border }]}
               >
-                <Text style={debtTypeFilter === 'owed' ? styles.filterTextActive : styles.filterTextInactive}>
+                <Text style={[styles.filterText, { color: debtTypeFilter === 'owed' ? colors.primaryText : colors.text }]}>
                   💳 Verecek
                 </Text>
               </TouchableOpacity>
@@ -306,19 +308,19 @@ export default function HomeScreen() {
           {/* Detailed Search Filter */}
           {showDebtFilter && (
             <View style={styles.searchContainer}>
-              <View style={styles.searchInput}>
-                <Ionicons name="search-outline" size={18} color="#9CA3AF" style={{ marginRight: 8 }} />
+              <View style={[styles.searchInput, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
+                <Ionicons name="search-outline" size={18} color={colors.iconSecondary} style={{ marginRight: 8 }} />
                 <TextInput
-                  style={styles.searchInputText}
+                  style={[styles.searchInputText, { color: colors.text }]}
                   placeholder="Kişi adı ile detaylı arama..."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.placeholder}
                   value={debtFilter}
                   onChangeText={setDebtFilter}
                   autoCapitalize="none"
                 />
                 {debtFilter.length > 0 && (
                   <TouchableOpacity onPress={() => setDebtFilter('')}>
-                    <Text style={styles.clearSearchText}>×</Text>
+                    <Text style={[styles.clearSearchText, { color: colors.textSecondary }]}>×</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -327,12 +329,12 @@ export default function HomeScreen() {
           
           {filteredDebts.length === 0 ? (
             <View style={styles.emptyMessage}>
-              <Text style={styles.emptyMessageText}>Herhangi bir borç bulunamadı</Text>
+              <Text style={[styles.emptyMessageText, { color: colors.textSecondary }]}>Herhangi bir borç bulunamadı</Text>
             </View>
           ) : paginatedDebts.map((debt) => (
             <TouchableOpacity 
               key={debt.id} 
-              style={styles.debtItem}
+              style={[styles.debtItem, { borderBottomColor: colors.divider }]}
               onPress={() => {
                 console.log('Navigating to DebtDetail with debt:', debt);
                 router.push({
@@ -344,14 +346,14 @@ export default function HomeScreen() {
               }}
             >
               <View style={styles.debtInfo}>
-                <Text style={styles.debtName}>
+                <Text style={[styles.debtName, { color: colors.text }]}>
                   {debt.name}
                 </Text>
-                <Text style={styles.debtDescription}>
+                <Text style={[styles.debtDescription, { color: colors.textSecondary }]}>
                   {debt.youwillreceive > 0 && debt.youwillgive === 0 ? 'Size borçlu' : 'Siz borçlusunuz'}
                 </Text>
               </View>
-              <Text style={[styles.debtAmount, debt.youwillreceive > 0 && debt.youwillgive === 0 ? styles.debtAmountReceive : styles.debtAmountGive]}>
+              <Text style={[styles.debtAmount, { color: debt.youwillreceive > 0 && debt.youwillgive === 0 ? colors.success : colors.error }]}>
                 ₺{debt.amount}
               </Text>
             </TouchableOpacity>
@@ -365,9 +367,9 @@ export default function HomeScreen() {
                 <TouchableOpacity 
                   onPress={() => setDebtPage(Math.max(1, debtPage - 1))}
                   disabled={debtPage === 1}
-                  style={[styles.paginationButton, debtPage === 1 ? styles.paginationButtonDisabled : styles.paginationButtonActive]}
+                  style={[styles.paginationButton, { backgroundColor: debtPage === 1 ? colors.divider : colors.primary }]}
                 >
-                  <Text style={[styles.paginationButtonText, debtPage === 1 ? styles.paginationButtonTextDisabled : styles.paginationButtonTextActive]}>‹</Text>
+                  <Text style={[styles.paginationButtonText, { color: debtPage === 1 ? colors.textTertiary : colors.primaryText }]}>‹</Text>
                 </TouchableOpacity>
 
                 {/* Page Numbers */}
@@ -375,9 +377,9 @@ export default function HomeScreen() {
                   <TouchableOpacity 
                     key={pageNum}
                     onPress={() => setDebtPage(pageNum)}
-                    style={[styles.paginationButton, debtPage === pageNum ? styles.paginationButtonActive : styles.paginationButtonInactive]}
+                    style={[styles.paginationButton, { backgroundColor: debtPage === pageNum ? colors.primary : colors.divider }]}
                   >
-                    <Text style={[styles.paginationButtonText, debtPage === pageNum ? styles.paginationButtonTextActive : styles.paginationButtonTextInactive]}>
+                    <Text style={[styles.paginationButtonText, { color: debtPage === pageNum ? colors.primaryText : colors.text }]}>
                       {pageNum}
                     </Text>
                   </TouchableOpacity>
@@ -387,13 +389,13 @@ export default function HomeScreen() {
                 <TouchableOpacity 
                   onPress={() => setDebtPage(Math.min(totalDebtPages, debtPage + 1))}
                   disabled={debtPage === totalDebtPages}
-                  style={[styles.paginationButton, debtPage === totalDebtPages ? styles.paginationButtonDisabled : styles.paginationButtonActive]}
+                  style={[styles.paginationButton, { backgroundColor: debtPage === totalDebtPages ? colors.divider : colors.primary }]}
                 >
-                  <Text style={[styles.paginationButtonText, debtPage === totalDebtPages ? styles.paginationButtonTextDisabled : styles.paginationButtonTextActive]}>›</Text>
+                  <Text style={[styles.paginationButtonText, { color: debtPage === totalDebtPages ? colors.textTertiary : colors.primaryText }]}>›</Text>
                 </TouchableOpacity>
               </View>
               
-              <Text style={styles.paginationInfo}>
+              <Text style={[styles.paginationInfo, { color: colors.textSecondary }]}>
                 Sayfa {debtPage} / {totalDebtPages} - Toplam {filteredDebts.length} borç
               </Text>
             </View>
@@ -403,12 +405,12 @@ export default function HomeScreen() {
         {/* Groups section */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Gruplar</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Gruplar</Text>
             <TouchableOpacity 
               onPress={() => setShowGroupFilter(!showGroupFilter)}
               style={styles.filterButton}
             >
-              <Ionicons name="search-outline" size={20} color="#4B5563" />
+              <Ionicons name="search-outline" size={20} color={colors.icon} />
             </TouchableOpacity>
           </View>
 
@@ -417,25 +419,25 @@ export default function HomeScreen() {
             <View style={styles.filterRow}>
               <TouchableOpacity 
                 onPress={() => setGroupTypeFilter('all')}
-                style={[styles.filterButtonAll, groupTypeFilter === 'all' ? styles.filterButtonActive : styles.filterButtonInactive]}
+                style={[styles.filterButtonAll, { backgroundColor: groupTypeFilter === 'all' ? colors.primary : colors.card, borderColor: groupTypeFilter === 'all' ? colors.primary : colors.border }]}
               >
-                <Text style={groupTypeFilter === 'all' ? styles.filterTextActive : styles.filterTextInactive}>
+                <Text style={[styles.filterText, { color: groupTypeFilter === 'all' ? colors.primaryText : colors.text }]}>
                   Tümü
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={() => setGroupTypeFilter('owe')}
-                style={[styles.filterButtonAll, groupTypeFilter === 'owe' ? styles.filterButtonOweActive : styles.filterButtonInactive]}
+                style={[styles.filterButtonAll, { backgroundColor: groupTypeFilter === 'owe' ? colors.success : colors.card, borderColor: groupTypeFilter === 'owe' ? colors.success : colors.border }]}
               >
-                <Text style={groupTypeFilter === 'owe' ? styles.filterTextActive : styles.filterTextInactive}>
+                <Text style={[styles.filterText, { color: groupTypeFilter === 'owe' ? colors.primaryText : colors.text }]}>
                   👥 Alacak
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={() => setGroupTypeFilter('owed')}
-                style={[styles.filterButtonAll, groupTypeFilter === 'owed' ? styles.filterButtonOwedActive : styles.filterButtonInactive]}
+                style={[styles.filterButtonAll, { backgroundColor: groupTypeFilter === 'owed' ? colors.error : colors.card, borderColor: groupTypeFilter === 'owed' ? colors.error : colors.border }]}
               >
-                <Text style={groupTypeFilter === 'owed' ? styles.filterTextActive : styles.filterTextInactive}>
+                <Text style={[styles.filterText, { color: groupTypeFilter === 'owed' ? colors.primaryText : colors.text }]}>
                   👥 Verecek
                 </Text>
               </TouchableOpacity>
@@ -445,19 +447,19 @@ export default function HomeScreen() {
           {/* Detailed Search Filter */}
           {showGroupFilter && (
             <View style={styles.searchContainer}>
-              <View style={styles.searchInput}>
-                <Ionicons name="search-outline" size={18} color="#9CA3AF" style={{ marginRight: 8 }} />
+              <View style={[styles.searchInput, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
+                <Ionicons name="search-outline" size={18} color={colors.iconSecondary} style={{ marginRight: 8 }} />
                 <TextInput
-                  style={styles.searchInputText}
+                  style={[styles.searchInputText, { color: colors.text }]}
                   placeholder="Grup adı ile detaylı arama..."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.placeholder}
                   value={groupFilter}
                   onChangeText={setGroupFilter}
                   autoCapitalize="none"
                 />
                 {groupFilter.length > 0 && (
                   <TouchableOpacity onPress={() => setGroupFilter('')}>
-                    <Text style={styles.clearSearchText}>×</Text>
+                    <Text style={[styles.clearSearchText, { color: colors.textSecondary }]}>×</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -466,12 +468,12 @@ export default function HomeScreen() {
           
           {filteredGroups.length === 0 ? (
             <View style={styles.emptyMessage}>
-              <Text style={styles.emptyMessageText}>Herhangi bir grup borcu bulunamadı</Text>
+              <Text style={[styles.emptyMessageText, { color: colors.textSecondary }]}>Herhangi bir grup borcu bulunamadı</Text>
             </View>
           ) : paginatedGroups.map((group, index) => (
             <TouchableOpacity 
               key={group.id} 
-              style={[styles.groupItem, index < paginatedGroups.length - 1 && styles.groupItemBorder]}
+              style={[styles.groupItem, { borderBottomColor: colors.divider }, index < paginatedGroups.length - 1 && styles.groupItemBorder]}
               onPress={() => {
                 console.log('Group item pressed:', group);
                 router.push({
@@ -483,14 +485,14 @@ export default function HomeScreen() {
               }}
             >
               <View style={styles.groupInfo}>
-                <Text style={styles.groupName}>
+                <Text style={[styles.groupName, { color: colors.text }]}>
                   {group.name}
                 </Text>
-                <Text style={styles.groupDescription}>
+                <Text style={[styles.groupDescription, { color: colors.textSecondary }]}>
                   {group.memberCount} üye
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={20} color={colors.iconSecondary} />
             </TouchableOpacity>
           ))}
 
@@ -502,9 +504,9 @@ export default function HomeScreen() {
                 <TouchableOpacity 
                   onPress={() => setGroupPage(Math.max(1, groupPage - 1))}
                   disabled={groupPage === 1}
-                  style={[styles.paginationButton, groupPage === 1 ? styles.paginationButtonDisabled : styles.paginationButtonActive]}
+                  style={[styles.paginationButton, { backgroundColor: groupPage === 1 ? colors.divider : colors.primary }]}
                 >
-                  <Text style={[styles.paginationButtonText, groupPage === 1 ? styles.paginationButtonTextDisabled : styles.paginationButtonTextActive]}>‹</Text>
+                  <Text style={[styles.paginationButtonText, { color: groupPage === 1 ? colors.textTertiary : colors.primaryText }]}>‹</Text>
                 </TouchableOpacity>
 
                 {/* Page Numbers */}
@@ -512,9 +514,9 @@ export default function HomeScreen() {
                   <TouchableOpacity 
                     key={pageNum}
                     onPress={() => setGroupPage(pageNum)}
-                    style={[styles.paginationButton, groupPage === pageNum ? styles.paginationButtonActive : styles.paginationButtonInactive]}
+                    style={[styles.paginationButton, { backgroundColor: groupPage === pageNum ? colors.primary : colors.divider }]}
                   >
-                    <Text style={[styles.paginationButtonText, groupPage === pageNum ? styles.paginationButtonTextActive : styles.paginationButtonTextInactive]}>
+                    <Text style={[styles.paginationButtonText, { color: groupPage === pageNum ? colors.primaryText : colors.text }]}>
                       {pageNum}
                     </Text>
                   </TouchableOpacity>
@@ -524,13 +526,13 @@ export default function HomeScreen() {
                 <TouchableOpacity 
                   onPress={() => setGroupPage(Math.min(totalGroupPages, groupPage + 1))}
                   disabled={groupPage === totalGroupPages}
-                  style={[styles.paginationButton, groupPage === totalGroupPages ? styles.paginationButtonDisabled : styles.paginationButtonActive]}
+                  style={[styles.paginationButton, { backgroundColor: groupPage === totalGroupPages ? colors.divider : colors.primary }]}
                 >
-                  <Text style={[styles.paginationButtonText, groupPage === totalGroupPages ? styles.paginationButtonTextDisabled : styles.paginationButtonTextActive]}>›</Text>
+                  <Text style={[styles.paginationButtonText, { color: groupPage === totalGroupPages ? colors.textTertiary : colors.primaryText }]}>›</Text>
                 </TouchableOpacity>
               </View>
               
-              <Text style={styles.paginationInfo}>
+              <Text style={[styles.paginationInfo, { color: colors.textSecondary }]}>
                 Sayfa {groupPage} / {totalGroupPages} - Toplam {filteredGroups.length} grup
               </Text>
             </View>
@@ -540,13 +542,13 @@ export default function HomeScreen() {
 
       {/* Floating Action Button */}
       <TouchableOpacity 
-        style={styles.fab}
+        style={[styles.fab, { backgroundColor: colors.primary }]}
         onPress={() => {
           console.log('Add new debt pressed');
           router.push('/add-debt');
         }}
       >
-        <Text style={styles.fabText}>+</Text>
+        <Text style={[styles.fabText, { color: colors.primaryText }]}>+</Text>
       </TouchableOpacity>
     </View>
   );
@@ -555,7 +557,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -568,7 +569,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#111827',
   },
   headerSpacer: {
     width: 32,
@@ -582,7 +582,6 @@ const styles = StyleSheet.create({
     right: -4,
     width: 12,
     height: 12,
-    backgroundColor: '#111827',
     borderRadius: 6,
   },
   loadingContainer: {
@@ -593,13 +592,11 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 18,
-    color: '#4B5563',
     textAlign: 'center',
     marginBottom: 16,
   },
   loadingSubText: {
     fontSize: 14,
-    color: '#9CA3AF',
     textAlign: 'center',
   },
   emptyContainer: {
@@ -611,13 +608,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
     textAlign: 'center',
     marginBottom: 16,
   },
   emptyText: {
     fontSize: 16,
-    color: '#4B5563',
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -641,36 +636,15 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-  },
-  summaryCardReceive: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
     marginRight: 12,
-  },
-  summaryCardGive: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FECACA',
-    marginLeft: 12,
   },
   summaryLabel: {
     fontSize: 14,
     marginBottom: 8,
   },
-  summaryLabelReceive: {
-    color: '#059669',
-  },
-  summaryLabelGive: {
-    color: '#DC2626',
-  },
   summaryAmount: {
     fontSize: 24,
     fontWeight: 'bold',
-  },
-  summaryAmountReceive: {
-    color: '#047857',
-  },
-  summaryAmountGive: {
-    color: '#B91C1C',
   },
   sectionContainer: {
     paddingHorizontal: 24,
@@ -685,7 +659,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
   },
   filterButton: {
     padding: 8,
@@ -704,56 +677,29 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
   },
-  filterButtonActive: {
-    backgroundColor: '#111827',
-    borderColor: '#111827',
-  },
-  filterButtonOweActive: {
-    backgroundColor: '#059669',
-    borderColor: '#059669',
-  },
-  filterButtonOwedActive: {
-    backgroundColor: '#dc2626',
-    borderColor: '#dc2626',
-  },
-  filterButtonInactive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#D1D5DB',
-  },
-  filterTextActive: {
+  filterText: {
     textAlign: 'center',
     fontSize: 14,
     fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  filterTextInactive: {
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
   },
   searchContainer: {
     marginBottom: 16,
   },
   clearSearchText: {
-    color: '#9ca3af',
     fontSize: 18,
     marginLeft: 8,
   },
   searchInput: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   searchInputText: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
     marginLeft: 8,
   },
   debtItem: {
@@ -762,7 +708,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   debtInfo: {
     flex: 1,
@@ -770,29 +715,21 @@ const styles = StyleSheet.create({
   debtName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#111827',
     marginBottom: 4,
   },
   debtDescription: {
     fontSize: 14,
-    color: '#6B7280',
   },
   debtAmount: {
     fontSize: 18,
     fontWeight: '600',
-  },
-  debtAmountReceive: {
-    color: '#059669',
-  },
-  debtAmountGive: {
-    color: '#DC2626',
   },
   emptyMessage: {
     paddingVertical: 32,
     alignItems: 'center',
   },
   emptyMessageText: {
-    color: '#6B7280',
+    fontSize: 14,
   },
   groupItem: {
     flexDirection: 'row',
@@ -802,7 +739,6 @@ const styles = StyleSheet.create({
   },
   groupItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
   groupInfo: {
     flex: 1,
@@ -810,12 +746,10 @@ const styles = StyleSheet.create({
   groupName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#111827',
     marginBottom: 4,
   },
   groupDescription: {
     fontSize: 14,
-    color: '#6b7280',
   },
   paginationContainer: {
     marginTop: 16,
@@ -831,32 +765,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  paginationButtonActive: {
-    backgroundColor: '#111827',
-  },
-  paginationButtonInactive: {
-    backgroundColor: '#f3f4f6',
-  },
-  paginationButtonDisabled: {
-    backgroundColor: '#f3f4f6',
-  },
   paginationButtonText: {
     fontSize: 14,
     fontWeight: '500',
   },
-  paginationButtonTextActive: {
-    color: '#ffffff',
-  },
-  paginationButtonTextInactive: {
-    color: '#374151',
-  },
-  paginationButtonTextDisabled: {
-    color: '#9ca3af',
-  },
   paginationInfo: {
     textAlign: 'center',
     fontSize: 12,
-    color: '#6b7280',
     marginTop: 8,
   },
   fab: {
@@ -865,7 +780,6 @@ const styles = StyleSheet.create({
     right: 24,
     width: 56,
     height: 56,
-    backgroundColor: '#111827',
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
@@ -879,7 +793,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   fabText: {
-    color: '#FFFFFF',
     fontSize: 24,
     fontWeight: '300',
   },

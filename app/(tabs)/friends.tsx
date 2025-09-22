@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../../components/buton';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import '../../global.css';
 import { friendService } from '../../services/api';
 
@@ -19,6 +20,7 @@ type SuggestedFriend = {
 
 export default function FriendScreen() {
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestedFriends, setSuggestedFriends] = useState<SuggestedFriend[]>([]);
@@ -226,10 +228,10 @@ export default function FriendScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Arkadaşlar</Text>
+        <View style={[styles.header, { backgroundColor: colors.background }]}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Arkadaşlar</Text>
         </View>
 
       <ScrollView 
@@ -239,21 +241,21 @@ export default function FriendScreen() {
       >
         {/* Search Section */}
         <View style={styles.searchSection}>
-          <Text style={styles.searchTitle}>Arkadaş Ara</Text>
+          <Text style={[styles.searchTitle, { color: colors.text }]}>Arkadaş Ara</Text>
           
-          <View style={styles.searchContainer}>
-            <Ionicons name="search-outline" size={18} color="#9CA3AF" style={styles.searchIcon} />
+          <View style={[styles.searchContainer, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
+            <Ionicons name="search-outline" size={18} color={colors.iconSecondary} style={styles.searchIcon} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="İsim veya e-posta ile ara..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCapitalize="none"
             />
             {searchQuery.length > 0 && (
               <Pressable onPress={() => setSearchQuery('')}>
-                <Text style={styles.searchClearButton}>×</Text>
+                <Text style={[styles.searchClearButton, { color: colors.textSecondary }]}>×</Text>
               </Pressable>
             )}
           </View>
@@ -262,7 +264,7 @@ export default function FriendScreen() {
         {/* Suggested Friends Section */}
         <View style={styles.friendsSection}>
           <View style={styles.friendsSectionHeader}>
-            <Text style={styles.friendsSectionTitle}>
+            <Text style={[styles.friendsSectionTitle, { color: colors.text }]}>
               {searchQuery ? `Arama Sonuçları (${filteredFriends.length})` : 'Arkadaşlar'}
             </Text>
             {!searchQuery && (
@@ -279,14 +281,14 @@ export default function FriendScreen() {
           
           {loading || searchLoading ? (
             <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Yükleniyor...</Text>
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Yükleniyor...</Text>
             </View>
           ) : filteredFriends.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyTitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
                 {searchQuery ? 'Sonuç bulunamadı' : 'Henüz öneri yok'}
               </Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                 {searchQuery 
                   ? 'Farklı bir arama terimi deneyin' 
                   : 'Tüm kullanıcılar zaten arkadaşınız'
@@ -297,20 +299,20 @@ export default function FriendScreen() {
             filteredFriends.map((friend, index) => (
               <View 
                 key={friend.id}
-                style={[styles.friendCard, index === filteredFriends.length - 1 && styles.friendCardLast]}
+                style={[styles.friendCard, { backgroundColor: colors.card }, index === filteredFriends.length - 1 && styles.friendCardLast]}
               >
                 {/* Friend Info */}
                 <View style={styles.friendCardContent}>
                   <View style={styles.friendInfo}>
-                    <View style={styles.friendAvatar}>
-                      <Text style={styles.friendAvatarText}>{friend.avatar}</Text>
+                    <View style={[styles.friendAvatar, { backgroundColor: colors.primary }]}>
+                      <Text style={[styles.friendAvatarText, { color: colors.primaryText }]}>{friend.avatar}</Text>
                     </View>
                     <View style={styles.friendDetails}>
-                      <Text style={styles.friendName}>
+                      <Text style={[styles.friendName, { color: colors.text }]}>
                         {friend.name}
                       </Text>
 
-                      <Text style={styles.friendPhone}>
+                      <Text style={[styles.friendPhone, { color: colors.textSecondary }]}>
                         {friend.phone}
                       </Text>
                     </View>

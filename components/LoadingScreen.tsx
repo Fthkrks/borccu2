@@ -1,11 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path, Defs, LinearGradient, Stop, G } from 'react-native-svg';
+import Svg, { Defs, G, LinearGradient, Path, Stop } from 'react-native-svg';
+import { useTheme } from '../contexts/ThemeContext';
 
 const LoadingScreen = () => {
+  const { colors, isDark } = useTheme();
+  
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         {/* Logo */}
         <View style={styles.logoContainer}>
@@ -41,17 +44,17 @@ const LoadingScreen = () => {
         </View>
 
         {/* App Name */}
-        <Text style={styles.appName}>Borccu</Text>
+        <Text style={[styles.appName, { color: colors.text }]}>Borccu</Text>
 
         {/* Loading Indicator */}
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1F2937" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </View>
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>4pp Studios</Text>
+        <Text style={[styles.footerText, { color: colors.textSecondary }]}>4pp Studios</Text>
       </View>
     </SafeAreaView>
   );
@@ -60,7 +63,6 @@ const LoadingScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
@@ -84,7 +86,6 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1F2937',
     marginBottom: 48,
     letterSpacing: 1,
   },
@@ -97,7 +98,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#6B7280',
     fontWeight: '500',
   },
 });
