@@ -211,13 +211,13 @@ export default function HomeScreen() {
 
         {/* Floating Action Button */}
         <TouchableOpacity 
-          style={[styles.fab, { backgroundColor: colors.primary }]}
+          style={[styles.fab, { backgroundColor: '#111827' }]}
           onPress={() => {
             console.log('Add new debt pressed');
             router.push('/add-debt');
           }}
         >
-          <Text style={[styles.fabText, { color: colors.primaryText }]}>+</Text>
+          <Text style={[styles.fabText, { color: 'white' }]}>+</Text>
         </TouchableOpacity>
       </View>
     );
@@ -246,17 +246,17 @@ export default function HomeScreen() {
         <View style={styles.summaryContainer}>
           <View style={styles.summaryRow}>
             {/* You'll receive card */}
-            <View style={[styles.summaryCard, { backgroundColor: isDark ? '#064E3B' : '#F0FDF4', borderColor: isDark ? '#059669' : '#BBF7D0' }]}>
-              <Text style={[styles.summaryLabel, { color: colors.success }]}>Alacağınız</Text>
-              <Text style={[styles.summaryAmount, { color: colors.success }]}>
+            <View style={[styles.summaryCard, { backgroundColor: isDark ? '#022C22' : '#DCFCE7', borderColor: isDark ? '#16A34A' : '#86EFAC' }]}>
+              <Text style={[styles.summaryLabel, { color: isDark ? '#10B981' : '#166534' }]}>Alacağınız</Text>
+              <Text style={[styles.summaryAmount, { color: isDark ? '#10B981' : '#166534' }]}>
                 ₺{debtsData.youwillreceive}
               </Text>
             </View>
 
             {/* You'll give card */}
-            <View style={[styles.summaryCard, { backgroundColor: isDark ? '#7F1D1D' : '#FEF2F2', borderColor: isDark ? '#DC2626' : '#FECACA' }]}>
-              <Text style={[styles.summaryLabel, { color: colors.error }]}>Vereceğiniz</Text>
-              <Text style={[styles.summaryAmount, { color: colors.error }]}>
+            <View style={[styles.summaryCard, { backgroundColor: isDark ? '#450A0A' : '#FEE2E2', borderColor: isDark ? '#B91C1C' : '#FCA5A5' }]}>
+              <Text style={[styles.summaryLabel, { color: isDark ? '#EF4444' : '#991B1B' }]}>Vereceğiniz</Text>
+              <Text style={[styles.summaryAmount, { color: isDark ? '#EF4444' : '#991B1B' }]}>
                 ₺{debtsData.youwillgive}
               </Text>
             </View>
@@ -541,15 +541,15 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <TouchableOpacity 
-        style={[styles.fab, { backgroundColor: colors.primary }]}
-        onPress={() => {
-          console.log('Add new debt pressed');
-          router.push('/add-debt');
-        }}
-      >
-        <Text style={[styles.fabText, { color: colors.primaryText }]}>+</Text>
-      </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.fab, { backgroundColor: '#111827' }]}
+          onPress={() => {
+            console.log('Add new debt pressed');
+            router.push('/add-debt');
+          }}
+        >
+          <Text style={[styles.fabText, { color: 'white' }]}>+</Text>
+        </TouchableOpacity>
     </View>
   );
 }
@@ -641,10 +641,12 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 14,
     marginBottom: 8,
+    textAlign: 'center',
   },
   summaryAmount: {
     fontSize: 24,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   sectionContainer: {
     paddingHorizontal: 24,
@@ -776,24 +778,24 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 96,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    bottom: 30,
+    right: 4,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
   fabText: {
-    fontSize: 24,
-    fontWeight: '300',
+    fontSize: 28,
+    fontWeight: '200',
   },
 });

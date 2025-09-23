@@ -4,6 +4,7 @@ import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import '../global.css';
 import { friendService, groupMemberService, groupService } from '../services/api';
 
@@ -24,6 +25,7 @@ type ContactWithAmount = Contact & {
 
 export default function CreateGroupScreen() {
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
   
   const [groupName, setGroupName] = useState('');
   const [description, setDescription] = useState('');
@@ -219,13 +221,13 @@ export default function CreateGroupScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backButton}>‹</Text>
+          <Text style={[styles.backButton, { color: colors.text }]}>‹</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Yeni Grup</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Yeni Grup</Text>
         <View style={styles.headerSpacer}></View>
       </View>
 
@@ -235,16 +237,16 @@ export default function CreateGroupScreen() {
         contentContainerStyle={styles.scrollViewContent}
       >
         {/* Group Info Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Grup Bilgileri</Text>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Grup Bilgileri</Text>
           
           {/* Group Name */}
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Grup Adı *</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Grup Adı *</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.text }]}
               placeholder="Örn: Tahoe Gezisi"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
               value={groupName}
               onChangeText={setGroupName}
             />
@@ -252,11 +254,11 @@ export default function CreateGroupScreen() {
 
           {/* Description */}
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Açıklama</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Açıklama</Text>
             <TextInput
-              style={[styles.textInput, styles.textAreaInput]}
+              style={[styles.textInput, styles.textAreaInput, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.text }]}
               placeholder="Grubun ne için olduğunu açıklayın"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
               value={description}
               onChangeText={setDescription}
               multiline
@@ -266,12 +268,12 @@ export default function CreateGroupScreen() {
 
           {/* Total Amount */}
           <View style={styles.inputGroupLast}>
-            <Text style={styles.inputLabel}>Toplam Tutar (₺) *</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Toplam Tutar (₺) *</Text>
             <View style={styles.amountRow}>
               <TextInput
-                style={[styles.textInput, styles.amountInput]}
+                style={[styles.textInput, styles.amountInput, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder, color: colors.text }]}
                 placeholder="0.00"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.placeholder}
                 value={totalAmount}
                 onChangeText={setTotalAmount}
                 keyboardType="numeric"
@@ -290,16 +292,16 @@ export default function CreateGroupScreen() {
         </View>
 
         {/* Members Section - WhatsApp Style */}
-        <View style={styles.membersSection}>
+        <View style={[styles.membersSection, { backgroundColor: colors.card }]}>
           <View style={styles.membersSectionHeader}>
-            <Text style={styles.sectionTitle}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Katılımcılar ({selectedContacts.length})
             </Text>
             <TouchableOpacity
               onPress={openContactModal}
-              style={styles.addMemberButton}
+              style={[styles.addMemberButton, { backgroundColor: colors.primary }]}
             >
-              <Text style={styles.addMemberButtonText}>+ Ekle</Text>
+              <Text style={[styles.addMemberButtonText, { color: colors.primaryText }]}>+ Ekle</Text>
             </TouchableOpacity>
           </View>
 
@@ -332,37 +334,37 @@ export default function CreateGroupScreen() {
               {/* Selected Members List with Amount Input */}
               <View style={styles.membersList}>
                 <View style={styles.membersListHeader}>
-                  <Text style={styles.membersListTitle}>Seçilen Katılımcılar:</Text>
-                  <Text style={styles.membersListTotal}>
+                  <Text style={[styles.membersListTitle, { color: colors.text }]}>Seçilen Katılımcılar:</Text>
+                  <Text style={[styles.membersListTotal, { color: colors.textSecondary }]}>
                     Toplam: {getEnteredTotal().toFixed(2)}₺ / {totalAmount || '0'}₺
                   </Text>
                 </View>
                 {selectedContacts.map((contact, index) => (
-                  <View key={contact.id} style={styles.memberItem}>
+                  <View key={contact.id} style={[styles.memberItem, { backgroundColor: colors.surface }]}>
                     <View style={styles.memberInfo}>
                       <View style={styles.memberInfoRow}>
                         <Text style={styles.memberAvatar}>{contact.avatar}</Text>
                         <View style={styles.memberDetails}>
-                          <Text style={styles.memberName}>{contact.name}</Text>
-                          <Text style={styles.memberPhone}>{contact.phone}</Text>
+                          <Text style={[styles.memberName, { color: colors.text }]}>{contact.name}</Text>
+                          <Text style={[styles.memberPhone, { color: colors.textSecondary }]}>{contact.phone}</Text>
                         </View>
                       </View>
                       <TouchableOpacity
                         onPress={() => removeContact(contact.id)}
-                        style={styles.removeMemberButton}
+                        style={[styles.removeMemberButton, { backgroundColor: colors.error }]}
                       >
-                        <Text style={styles.removeMemberButtonText}>×</Text>
+                        <Text style={[styles.removeMemberButtonText, { color: 'white' }]}>×</Text>
                       </TouchableOpacity>
                     </View>
                     
                     {/* Amount Input for each contact */}
                     <View style={styles.amountInputContainer}>
-                      <View style={styles.amountInputWrapper}>
-                        <Text style={styles.currencyLabel}>₺</Text>
+                      <View style={[styles.amountInputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
+                        <Text style={[styles.currencyLabel, { color: colors.text }]}>₺</Text>
                         <TextInput
-                          style={styles.memberAmountInput}
+                          style={[styles.memberAmountInput, { color: colors.text }]}
                           placeholder="0.00"
-                          placeholderTextColor="#9CA3AF"
+                          placeholderTextColor={colors.placeholder}
                           value={contact.amount}
                           onChangeText={(value) => updateContactAmount(contact.id, value)}
                           keyboardType="numeric"
@@ -376,9 +378,9 @@ export default function CreateGroupScreen() {
           )}
 
           {selectedContacts.length === 0 && (
-            <View style={styles.emptyContainer}>
+            <View style={[styles.emptyContainer, { backgroundColor: colors.surface }]}>
               <Text style={styles.emptyIcon}>👥</Text>
-              <Text style={styles.emptyText}>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 Henüz katılımcı eklenmedi{'\n'}Grup oluşturmak için en az 1 kişi seçin{'\n'}(Grup en az 2 kişiden oluşmalıdır)
               </Text>
             </View>
@@ -390,18 +392,18 @@ export default function CreateGroupScreen() {
           <TouchableOpacity
             onPress={handleCreateGroup}
             disabled={loading}
-            style={[styles.createButton, loading && styles.createButtonDisabled]}
+            style={[styles.createButton, { backgroundColor: '#111827' }, loading && styles.createButtonDisabled]}
           >
-            <Text style={styles.createButtonText}>
+            <Text style={[styles.createButtonText, { color: 'white' }]}>
               {loading ? 'Oluşturuluyor...' : 'Grubu Oluştur'}
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity
             onPress={() => router.back()}
-            style={styles.cancelButton}
+            style={[styles.cancelButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
-            <Text style={styles.cancelButtonText}>İptal</Text>
+            <Text style={[styles.cancelButtonText, { color: colors.text }]}>İptal</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -412,47 +414,47 @@ export default function CreateGroupScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           {/* Modal Header */}
-          <SafeAreaView style={styles.modalHeaderContainer}>
-            <View style={styles.modalHeader}>
+          <SafeAreaView style={[styles.modalHeaderContainer, { backgroundColor: colors.background }]}>
+            <View style={[styles.modalHeader, { backgroundColor: colors.background }]}>
               <TouchableOpacity onPress={() => {
                 setShowContactModal(false);
                 setSearchQuery('');
               }}>
-                <Text style={styles.modalBackButton}>←</Text>
+                <Text style={[styles.modalBackButton, { color: colors.text }]}>←</Text>
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
                 Katılımcı Ekle ({selectedContacts.length})
               </Text>
               <TouchableOpacity 
                 onPress={() => setShowContactModal(false)}
-                style={styles.modalDoneButton}
+                style={[styles.modalDoneButton, { backgroundColor: colors.primary }]}
               >
-                <Text style={styles.modalDoneButtonText}>Tamam</Text>
+                <Text style={[styles.modalDoneButtonText, { color: colors.primaryText }]}>Tamam</Text>
               </TouchableOpacity>
             </View>
           </SafeAreaView>
 
           {/* Selected Contacts Header - WhatsApp Style */}
           {selectedContacts.length > 0 && (
-            <View style={styles.selectedContactsHeader}>
+            <View style={[styles.selectedContactsHeader, { backgroundColor: colors.surface }]}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={styles.selectedContactsHeaderRow}>
                   {selectedContacts.map((contact) => (
                     <View key={contact.id} style={styles.selectedContactHeaderItem}>
                       <View style={styles.selectedContactHeaderWrapper}>
-                        <View style={styles.selectedContactHeaderAvatar}>
-                          <Text style={styles.selectedContactHeaderAvatarText}>{contact.avatar}</Text>
+                        <View style={[styles.selectedContactHeaderAvatar, { backgroundColor: colors.primary }]}>
+                          <Text style={[styles.selectedContactHeaderAvatarText, { color: colors.primaryText }]}>{contact.avatar}</Text>
                         </View>
                         <TouchableOpacity
                           onPress={() => removeContact(contact.id)}
-                          style={styles.removeSelectedContactButton}
+                          style={[styles.removeSelectedContactButton, { backgroundColor: colors.error }]}
                         >
-                          <Text style={styles.removeSelectedContactButtonText}>×</Text>
+                          <Text style={[styles.removeSelectedContactButtonText, { color: 'white' }]}>×</Text>
                         </TouchableOpacity>
                       </View>
-                      <Text style={styles.selectedContactHeaderName} numberOfLines={1}>
+                      <Text style={[styles.selectedContactHeaderName, { color: colors.text }]} numberOfLines={1}>
                         {contact.name.split(' ')[0]}
                       </Text>
                     </View>
@@ -464,14 +466,14 @@ export default function CreateGroupScreen() {
 
           {/* Search Bar */}
           <View style={styles.searchSection}>
-            <View style={styles.searchContainer}>
+            <View style={[styles.searchContainer, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
               <View style={styles.searchIconContainer}>
-                <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+                <Ionicons name="search-outline" size={18} color={colors.iconSecondary} />
               </View>
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: colors.text }]}
                 placeholder="Kişi ara..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.placeholder}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoCapitalize="none"
@@ -489,22 +491,22 @@ export default function CreateGroupScreen() {
               return (
                 <TouchableOpacity
                   onPress={() => handleContactSelect(item)}
-                  style={styles.contactItem}
+                  style={[styles.contactItem, { backgroundColor: colors.card }]}
                   disabled={isSelected}
                 >
                   <View style={styles.contactItemContent}>
-                    <View style={styles.contactItemAvatar}>
-                      <Text style={styles.contactItemAvatarText}>{item.avatar}</Text>
+                    <View style={[styles.contactItemAvatar, { backgroundColor: colors.primary }]}>
+                      <Text style={[styles.contactItemAvatarText, { color: colors.primaryText }]}>{item.avatar}</Text>
                     </View>
                     <View style={styles.contactItemInfo}>
-                      <Text style={[styles.contactItemName, isSelected && styles.contactItemNameSelected]}>
+                      <Text style={[styles.contactItemName, { color: colors.text }, isSelected && styles.contactItemNameSelected]}>
                         {item.name}
                       </Text>
-                      <Text style={styles.contactItemPhone}>{item.phone}</Text>
+                      <Text style={[styles.contactItemPhone, { color: colors.textSecondary }]}>{item.phone}</Text>
                     </View>
                     {isSelected && (
-                      <View style={styles.selectedIndicator}>
-                        <Text style={styles.selectedIndicatorText}>✓</Text>
+                      <View style={[styles.selectedIndicator, { backgroundColor: colors.success }]}>
+                        <Text style={[styles.selectedIndicatorText, { color: 'white' }]}>✓</Text>
                       </View>
                     )}
                   </View>
@@ -513,7 +515,7 @@ export default function CreateGroupScreen() {
             }}
             ListEmptyComponent={() => (
               <View style={styles.emptyListContainer}>
-                <Text style={styles.emptyListText}>
+                <Text style={[styles.emptyListText, { color: colors.textSecondary }]}>
                   {searchQuery ? 'Aradığınız kişi bulunamadı' : 'Henüz arkadaş eklenmemiş'}
                 </Text>
               </View>

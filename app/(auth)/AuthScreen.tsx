@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../../components/buton';
 import { useAuth } from '../../contexts/AuthContext';
@@ -269,7 +269,7 @@ export default function AuthScreen() {
 
   if (showSignup) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <KeyboardAvoidingView 
           style={styles.flex1} 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -280,73 +280,51 @@ export default function AuthScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Illustration Section */}
+            {/* Logo Section */}
             <View style={styles.illustrationSection}>
-              {/* Handshake Illustration */}
-              <View style={styles.signupIllustration}>
-                {/* Background Elements */}
-                <View style={styles.signupBgElement1} />
-                <View style={styles.signupBgElement2} />
-                <View style={styles.signupBgElement3} />
-                <View style={styles.signupBgElement4} />
-                <View style={styles.signupBgElement5} />
-                
-                {/* Two People Handshake */}
-                <View style={styles.handshakeContainer}>
-                  {/* Person 1 */}
-                  <View style={[styles.handshakePerson, styles.handshakePerson1]}>
-                    <View style={styles.handshakePersonHead} />
-                    <View style={[styles.handshakePersonBody, styles.handshakePersonBody1]} />
-                  </View>
-                  
-                  {/* Handshake */}
-                  <View style={styles.handshake} />
-                  
-                  {/* Person 2 */}
-                  <View style={[styles.handshakePerson, styles.handshakePerson2]}>
-                    <View style={styles.handshakePersonHead} />
-                    <View style={[styles.handshakePersonBody, styles.handshakePersonBody2]} />
-                  </View>
-                </View>
-
-                {/* Briefcase */}
-                <View style={styles.briefcase} />
+              {/* App Logo */}
+              <View style={styles.logoContainer}>
+                <Image 
+                  source={require('../../assets/images/app_icon_light.svg')} 
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
               </View>
 
               {/* Title */}
-              <Text style={styles.formTitle}>Kayıt Ol</Text>
+              <Text style={[styles.formTitle, { color: colors.text }]}>Kayıt Ol</Text>
             </View>
 
             {/* Signup Form */}
             <View style={styles.formContainer}>
               {/* Google Signup Button */}
               <TouchableOpacity 
-                style={styles.googleButton}
+                style={[styles.googleButton, { backgroundColor: colors.card, borderColor: colors.border }]}
                 onPress={handleGoogleLogin}
               >
                 <View style={styles.googleIcon}>
                   <Text style={styles.googleIconText}>G</Text>
                 </View>
-                <Text style={styles.googleButtonText}>
+                <Text style={[styles.googleButtonText, { color: colors.text }]}>
                   Google ile Kayıt Ol
                 </Text>
               </TouchableOpacity>
 
               {/* OR Divider */}
               <View style={styles.orDivider}>
-                <View style={styles.orLine} />
-                <Text style={styles.orText}>VEYA</Text>
-                <View style={styles.orLine} />
+                <View style={[styles.orLine, { backgroundColor: colors.divider }]} />
+                <Text style={[styles.orText, { color: colors.textSecondary }]}>VEYA</Text>
+                <View style={[styles.orLine, { backgroundColor: colors.divider }]} />
               </View>
 
               {/* Email Input */}
               <View style={styles.inputContainer}>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <View style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
+                  <Ionicons name="mail-outline" size={20} color={colors.iconSecondary} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { color: colors.text }]}
                     placeholder="E-posta"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.placeholder}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -357,12 +335,12 @@ export default function AuthScreen() {
 
               {/* Password Input */}
               <View style={styles.inputContainer}>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <View style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
+                  <Ionicons name="lock-closed-outline" size={20} color={colors.iconSecondary} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { color: colors.text }]}
                     placeholder="Şifre"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.placeholder}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
@@ -372,12 +350,12 @@ export default function AuthScreen() {
 
               {/* Full Name Input */}
               <View style={styles.inputContainer}>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <View style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
+                  <Ionicons name="person-outline" size={20} color={colors.iconSecondary} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { color: colors.text }]}
                     placeholder="Ad Soyad"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.placeholder}
                     value={fullName}
                     onChangeText={setFullName}
                     autoCapitalize="words"
@@ -387,12 +365,12 @@ export default function AuthScreen() {
 
               {/* Phone Input */}
               <View style={styles.inputContainer}>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="call-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <View style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
+                  <Ionicons name="call-outline" size={20} color={colors.iconSecondary} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { color: colors.text }]}
                     placeholder="Telefon numarası"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.placeholder}
                     value={phone}
                     onChangeText={setPhone}
                     keyboardType="phone-pad"
@@ -404,9 +382,9 @@ export default function AuthScreen() {
               {/* Login Link */}
               <View style={styles.linkContainer}>
                 <View style={styles.linkRow}>
-                  <Text style={styles.linkText}>Zaten hesabınız var mı? </Text>
+                  <Text style={[styles.linkText, { color: colors.textSecondary }]}>Zaten hesabınız var mı? </Text>
                   <TouchableOpacity onPress={() => {setShowSignup(false); setShowLogin(true);}}>
-                    <Text style={styles.linkButtonBlue}>Giriş Yap</Text>
+                    <Text style={[styles.linkButtonBlue, { color: colors.primary }]}>Giriş Yap</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -431,7 +409,7 @@ export default function AuthScreen() {
 
   if (showLogin) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <KeyboardAvoidingView 
           style={styles.flex1} 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -442,43 +420,31 @@ export default function AuthScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Illustration Section */}
+            {/* Logo Section */}
             <View style={styles.illustrationSection}>
-              {/* Modern Illustration */}
-              <View style={styles.loginIllustration}>
-                {/* Background Elements */}
-                <View style={styles.signupBgElement1} />
-                <View style={styles.signupBgElement2} />
-                <View style={styles.signupBgElement3} />
-                <View style={styles.signupBgElement4} />
-                <View style={styles.signupBgElement5} />
-                
-                {/* Main Character */}
-                <View style={styles.loginCharacter}>
-                  {/* Person */}
-                  <View style={styles.loginCharacterInner}>
-                    <View style={styles.loginCharacterHead} />
-                    <View style={styles.loginCharacterBody} />
-                  </View>
-                  {/* Object in hand */}
-                  <View style={styles.loginObject} />
-                </View>
+              {/* App Logo */}
+              <View style={styles.logoContainer}>
+                <Image 
+                  source={require('../../assets/images/app_icon_light.svg')} 
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
               </View>
 
               {/* Title */}
-              <Text style={styles.formTitle}>Giriş Yap</Text>
+              <Text style={[styles.formTitle, { color: colors.text }]}>Giriş Yap</Text>
             </View>
 
             {/* Login Form */}
             <View style={styles.formContainer}>
               {/* Email Input */}
               <View style={styles.inputContainer}>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="at-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <View style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
+                  <Ionicons name="at-outline" size={20} color={colors.iconSecondary} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { color: colors.text }]}
                     placeholder="E-posta"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.placeholder}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -489,19 +455,19 @@ export default function AuthScreen() {
 
               {/* Password Input */}
               <View style={styles.inputContainer}>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                <View style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.inputBorder }]}>
+                  <Ionicons name="lock-closed-outline" size={20} color={colors.iconSecondary} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { color: colors.text }]}
                     placeholder="Şifre"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.placeholder}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
                   />
                 </View>
                 <TouchableOpacity style={styles.forgotPassword}>
-                  <Text style={styles.forgotPasswordText}>Unuttum?</Text>
+                  <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>Unuttum?</Text>
                 </TouchableOpacity>
               </View>
 
@@ -519,20 +485,20 @@ export default function AuthScreen() {
 
               {/* OR Divider */}
               <View style={styles.orDivider}>
-                <View style={styles.orLine} />
-                <Text style={styles.orText}>VEYA</Text>
-                <View style={styles.orLine} />
+                <View style={[styles.orLine, { backgroundColor: colors.divider }]} />
+                <Text style={[styles.orText, { color: colors.textSecondary }]}>VEYA</Text>
+                <View style={[styles.orLine, { backgroundColor: colors.divider }]} />
               </View>
 
               {/* Google Login Button */}
               <TouchableOpacity 
-                style={styles.googleButton}
+                style={[styles.googleButton, { backgroundColor: colors.card, borderColor: colors.border }]}
                 onPress={handleGoogleLogin}
               >
                 <View style={styles.googleIcon}>
                   <Text style={styles.googleIconText}>G</Text>
                 </View>
-                <Text style={styles.googleButtonText}>
+                <Text style={[styles.googleButtonText, { color: colors.text }]}>
                   Google ile Giriş
                 </Text>
               </TouchableOpacity>
@@ -540,9 +506,9 @@ export default function AuthScreen() {
               {/* Register Link */}
               <View style={styles.linkContainer}>
                 <View style={styles.linkRow}>
-                  <Text style={styles.linkText}>Borccu'da yeni misiniz? </Text>
+                  <Text style={[styles.linkText, { color: colors.textSecondary }]}>Borccu'da yeni misiniz? </Text>
                   <TouchableOpacity onPress={() => {setShowLogin(false); setShowSignup(true);}}>
-                    <Text style={styles.linkButton}>Kayıt Ol</Text>
+                    <Text style={[styles.linkButton, { color: colors.primary }]}>Kayıt Ol</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -558,19 +524,15 @@ export default function AuthScreen() {
       {/* Supabase Test Component - Sadece development'ta göster */}
       {__DEV__ && !isSupabaseConfigured && <SupabaseTestComponent />}
       
-      {/* Illustration Area */}
+      {/* Logo and Title Area */}
       <View style={styles.illustrationContainer}>
-        {/* Character Illustration Placeholder */}
-        <View style={styles.illustrationBox}>
-          <View style={styles.illustrationRow}>
-            {/* Person 1 */}
-            <View style={[styles.person, styles.person1]} />
-            {/* Person 2 */}
-            <View style={[styles.person, styles.person2]} />
-            {/* Person 3 */}
-            <View style={[styles.person, styles.person3]} />
-          </View>
-          <View style={styles.illustrationLine} />
+        {/* App Logo */}
+        <View style={styles.logoContainer}>
+          <Image 
+            source={require('../../assets/images/app_icon_light.svg')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
         {/* Title */}
@@ -651,13 +613,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   
-  // Illustration styles
+  // Logo and Title styles
   illustrationContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 48,
+  },
+  logoContainer: {
+    width: 120,
+    height: 120,
+    marginBottom: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   illustrationSection: {
     alignItems: 'center',

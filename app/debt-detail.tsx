@@ -72,52 +72,52 @@ export default function DebtDetailScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <SafeAreaView style={[styles.headerContainer, { backgroundColor: colors.background }]}>
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.background }]}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backButton}>←</Text>
+            <Text style={[styles.backButton, { color: colors.text }]}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Borç Detayı</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Borç Detayı</Text>
           <View style={styles.headerSpacer}></View>
         </View>
       </SafeAreaView>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Debt Info Card */}
-        <View style={styles.debtCard}>
+        <View style={[styles.debtCard, { backgroundColor: colors.card }]}>
           <View style={styles.debtHeader}>
-            <Text style={styles.debtTitle}>
+            <Text style={[styles.debtTitle, { color: colors.text }]}>
               {isOwed ? 'Borç Aldım' : 'Borç Verdim'}
             </Text>
-            <Text style={styles.debtAmount}>
+            <Text style={[styles.debtAmount, { color: colors.text }]}>
               ₺{debtAmount.toFixed(2)}
             </Text>
           </View>
           
           <View style={styles.debtInfo}>
             <View style={styles.debtInfoRow}>
-              <Text style={styles.debtInfoLabel}>Kişi:</Text>
-              <Text style={styles.debtInfoValue}>
+              <Text style={[styles.debtInfoLabel, { color: colors.textSecondary }]}>Kişi:</Text>
+              <Text style={[styles.debtInfoValue, { color: colors.text }]}>
                 {otherParty?.full_name || otherParty?.email || 'Bilinmeyen'}
               </Text>
             </View>
             
             <View style={styles.debtInfoRow}>
-              <Text style={styles.debtInfoLabel}>Durum:</Text>
-              <Text style={[styles.debtInfoValue, debt.is_settled ? styles.settledText : styles.pendingText]}>
+              <Text style={[styles.debtInfoLabel, { color: colors.textSecondary }]}>Durum:</Text>
+              <Text style={[styles.debtInfoValue, { color: debt.is_settled ? colors.success : colors.warning }, debt.is_settled ? styles.settledText : styles.pendingText]}>
                 {debt.is_settled ? 'Kapatıldı' : 'Beklemede'}
               </Text>
             </View>
             
             {debt.description && (
               <View style={styles.debtInfoRow}>
-                <Text style={styles.debtInfoLabel}>Açıklama:</Text>
-                <Text style={styles.debtInfoValue}>{debt.description}</Text>
+                <Text style={[styles.debtInfoLabel, { color: colors.textSecondary }]}>Açıklama:</Text>
+                <Text style={[styles.debtInfoValue, { color: colors.text }]}>{debt.description}</Text>
               </View>
             )}
             
             <View style={styles.debtInfoRow}>
-              <Text style={styles.debtInfoLabel}>Tarih:</Text>
-              <Text style={styles.debtInfoValue}>
+              <Text style={[styles.debtInfoLabel, { color: colors.textSecondary }]}>Tarih:</Text>
+              <Text style={[styles.debtInfoValue, { color: colors.text }]}>
                 {new Date(debt.created_at).toLocaleDateString('tr-TR')}
               </Text>
             </View>
@@ -163,10 +163,9 @@ export default function DebtDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
   },
   headerContainer: {
-    backgroundColor: '#ffffff',
+    // backgroundColor will be set dynamically
   },
   header: {
     flexDirection: 'row',
@@ -174,15 +173,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 16,
-    backgroundColor: '#ffffff',
+    // backgroundColor will be set dynamically
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
+    // color will be set dynamically
   },
   backButton: {
-    color: '#111827',
+    // color will be set dynamically
     fontSize: 24,
   },
   headerSpacer: {
@@ -195,7 +194,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 50,
     fontSize: 16,
-    color: '#6b7280',
+    // color will be set dynamically
   },
   errorContainer: {
     flex: 1,
@@ -205,12 +204,12 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#ef4444',
+    // color will be set dynamically
     marginBottom: 20,
     textAlign: 'center',
   },
   debtCard: {
-    backgroundColor: '#ffffff',
+    // backgroundColor will be set dynamically
     margin: 24,
     borderRadius: 12,
     padding: 24,
@@ -227,13 +226,13 @@ const styles = StyleSheet.create({
   debtTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#374151',
+    // color will be set dynamically
     marginBottom: 8,
   },
   debtAmount: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#111827',
+    // color will be set dynamically
   },
   debtInfo: {
     gap: 16,
@@ -246,21 +245,21 @@ const styles = StyleSheet.create({
   debtInfoLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6b7280',
+    // color will be set dynamically
     flex: 1,
   },
   debtInfoValue: {
     fontSize: 14,
-    color: '#111827',
+    // color will be set dynamically
     flex: 2,
     textAlign: 'right',
   },
   settledText: {
-    color: '#10b981',
+    // color will be set dynamically
     fontWeight: '600',
   },
   pendingText: {
-    color: '#f59e0b',
+    // color will be set dynamically
     fontWeight: '600',
   },
   actionsContainer: {

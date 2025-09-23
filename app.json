@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "example",
-    "slug": "example",
+    "name": "Borccu",
+    "slug": "borccu",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "example",
+    "icon": "./assets/images/app_icon_light.svg",
+    "scheme": "borccu",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -13,11 +13,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/app_icon_light.svg",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.example.app",
+      "package": "com.borccu.app",
       "versionCode": 1
     },
     "web": {

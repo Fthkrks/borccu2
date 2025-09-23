@@ -14,7 +14,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.text,
+        tabBarActiveTintColor: '#FFFFFF',
         tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
           backgroundColor: colors.background,
@@ -39,7 +39,7 @@ export default function TabLayout() {
             <Ionicons 
               size={24} 
               name={focused ? 'home' : 'home-outline'} 
-              color={color} 
+              color={focused ? '#FFFFFF' : color} 
             />
           ),
         }}
