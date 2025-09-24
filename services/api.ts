@@ -151,6 +151,29 @@ export const debtService = {
     return { data: filteredData, error: null };
   },
 
+  async getAllDebts() {
+    const { data, error } = await supabase
+      .from('debts')
+      .select(`
+        *,
+        creditor:profiles!debts_creditor_id_fkey (id, full_name, email, avatar_url),
+        debtor:profiles!debts_debtor_id_fkey (id, full_name, email, avatar_url)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return { data: [], error };
+    }
+
+    // Diğer taraf kolay erişim
+    const processed = (data || []).map((debt: any) => ({
+      ...debt,
+      other_party: debt.debtor || debt.creditor,
+    }));
+
+    return { data: processed, error: null };
+  },
+
   async getDebtById(debtId: string) {
     const { data, error } = await supabase
       .from('debts')

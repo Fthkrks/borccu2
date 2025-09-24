@@ -11,6 +11,7 @@ import { debtService, friendService, groupService, notificationService } from '.
 export default function HomeScreen() {
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
+  const currentUserId = user?.id;
   
   // State
   const [hasData, setHasData] = useState(false);
@@ -50,6 +51,7 @@ export default function HomeScreen() {
 
   const loadData = async () => {
     if (!user) return;
+    if (!currentUserId) return;
     
     setLoading(true);
     try {
@@ -65,15 +67,15 @@ export default function HomeScreen() {
 
       // Borçları, grupları ve bildirimleri paralel olarak yükle
       const [debtsResult, groupsResult, notificationsResult, unreadNotificationsResult] = await Promise.all([
-        debtService.getDebts(user.id),
-        groupService.getGroups(user.id),
-        friendService.getFriendRequests(user.id),
-        notificationService.getNotifications(user.id)
+        debtService.getAllDebts(),
+        groupService.getGroups(currentUserId),
+        friendService.getFriendRequests(currentUserId),
+        notificationService.getNotifications(currentUserId)
       ]);
 
-      if (debtsResult.data) {
-        setDebts(debtsResult.data);
-      }
+      // Tüm borçlardan sadece mevcut kullanıcının creditor olduğu borçları göster
+      const filteredDebts = (debtsResult.data || []).filter((d: any) => d.creditor_id === currentUserId);
+      setDebts(filteredDebts);
       
       if (groupsResult.data) {
         setGroups(groupsResult.data);
@@ -92,7 +94,7 @@ export default function HomeScreen() {
         setHasNotifications(false);
       }
       
-      setHasData((debtsResult.data?.length || 0) > 0 || (groupsResult.data?.length || 0) > 0);
+      setHasData((filteredDebts.length || 0) > 0 || (groupsResult.data?.length || 0) > 0);
     } catch (error) {
       console.error('Data loading error:', error);
       // Set safe defaults on error
@@ -108,13 +110,13 @@ export default function HomeScreen() {
   // Hesaplanan değerler - API'den gelen işlenmiş veriye göre
   const debtsData = {
     youwillreceive: debts
-      .filter(d => !d.is_settled && d.debtor_id === user?.id)
+      .filter(d => !d.is_settled && d.creditor_id === currentUserId)
       .reduce((sum, d) => sum + (d.youwillreceive || 0), 0),
     youwillgive: debts
-      .filter(d => !d.is_settled && d.debtor_id === user?.id)
+      .filter(d => !d.is_settled && d.creditor_id === currentUserId)
       .reduce((sum, d) => sum + (d.youwillgive || 0), 0),
     allDebts: debts
-      .filter(d => !d.is_settled && d.debtor_id === user?.id)
+      .filter(d => !d.is_settled && d.creditor_id === currentUserId)
       .map(d => {
         console.log('🔍 Debt mapping DEBUG:', { 
           id: d.id, 
@@ -125,7 +127,8 @@ export default function HomeScreen() {
         
         // Kullanıcının perspektifinden borç miktarını hesapla (sadece debtor kayıtları)
         const amount = (d.youwillreceive || 0) > 0 ? (d.youwillreceive || 0) : (d.youwillgive || 0);
-        const type = (d.youwillreceive || 0) > 0 ? ('owe' as const) : ('owed' as const);
+        // Kreditor perspektifinde: youwillreceive > 0 ise karşı taraf size borçlu -> 'owed'
+        const type = (d.youwillreceive || 0) > 0 ? ('owed' as const) : ('owe' as const);
         const name = d.other_party?.full_name || d.other_party?.email || 'Bilinmeyen';
         
         console.log('🔍 Mapped result:', { amount, type, name });
@@ -271,7 +274,7 @@ export default function HomeScreen() {
             <View style={[styles.summaryCard, { backgroundColor: isDark ? '#022C22' : '#DCFCE7', borderColor: isDark ? '#16A34A' : '#86EFAC' }]}>
               <Text style={[styles.summaryLabel, { color: isDark ? '#10B981' : '#166534' }]}>Alacağınız</Text>
               <Text style={[styles.summaryAmount, { color: isDark ? '#10B981' : '#166534' }]}>
-                ₺{debtsData.youwillreceive}
+                ₺{debtsData.youwillgive}
               </Text>
             </View>
 
@@ -279,7 +282,7 @@ export default function HomeScreen() {
             <View style={[styles.summaryCard, { backgroundColor: isDark ? '#450A0A' : '#FEE2E2', borderColor: isDark ? '#B91C1C' : '#FCA5A5' }]}>
               <Text style={[styles.summaryLabel, { color: isDark ? '#EF4444' : '#991B1B' }]}>Vereceğiniz</Text>
               <Text style={[styles.summaryAmount, { color: isDark ? '#EF4444' : '#991B1B' }]}>
-                ₺{debtsData.youwillgive}
+                ₺{debtsData.youwillreceive}
               </Text>
             </View>
           </View>
@@ -309,18 +312,18 @@ export default function HomeScreen() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                onPress={() => setDebtTypeFilter('owe')}
-                style={[styles.filterButtonAll, { backgroundColor: debtTypeFilter === 'owe' ? colors.success : colors.card, borderColor: debtTypeFilter === 'owe' ? colors.success : colors.border }]}
+                onPress={() => setDebtTypeFilter('owed')}
+                style={[styles.filterButtonAll, { backgroundColor: debtTypeFilter === 'owed' ? colors.success : colors.card, borderColor: debtTypeFilter === 'owed' ? colors.success : colors.border }]}
               >
-                <Text style={[styles.filterText, { color: debtTypeFilter === 'owe' ? colors.primaryText : colors.text }]}>
+                <Text style={[styles.filterText, { color: debtTypeFilter === 'owed' ? colors.primaryText : colors.text }]}>
                   💰 Alacak
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                onPress={() => setDebtTypeFilter('owed')}
-                style={[styles.filterButtonAll, { backgroundColor: debtTypeFilter === 'owed' ? colors.error : colors.card, borderColor: debtTypeFilter === 'owed' ? colors.error : colors.border }]}
+                onPress={() => setDebtTypeFilter('owe')}
+                style={[styles.filterButtonAll, { backgroundColor: debtTypeFilter === 'owe' ? colors.error : colors.card, borderColor: debtTypeFilter === 'owe' ? colors.error : colors.border }]}
               >
-                <Text style={[styles.filterText, { color: debtTypeFilter === 'owed' ? colors.primaryText : colors.text }]}>
+                <Text style={[styles.filterText, { color: debtTypeFilter === 'owe' ? colors.primaryText : colors.text }]}>
                   💳 Verecek
                 </Text>
               </TouchableOpacity>
@@ -372,10 +375,10 @@ export default function HomeScreen() {
                   {debt.name}
                 </Text>
                 <Text style={[styles.debtDescription, { color: colors.textSecondary }]}>
-                  {debt.type === 'owe' ? 'Size borçlu' : 'Siz borçlusunuz'}
+                  {debt.youwillgive > 0 ? 'Size borçlu' : 'Siz borçlusunuz'}
                 </Text>
               </View>
-              <Text style={[styles.debtAmount, { color: debt.type === 'owe' ? colors.success : colors.error }]}>
+              <Text style={[styles.debtAmount, { color: debt.youwillgive > 0 ? colors.success : colors.error }]}>
                 ₺{debt.amount}
               </Text>
             </TouchableOpacity>
