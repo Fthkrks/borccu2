@@ -4,9 +4,10 @@ import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, Linking, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import '../global.css';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { debtService, friendService, utilService } from '../services/api';
+import { debtService, friendService, notificationService, utilService } from '../services/api';
 
 // Mock contact list - gerçek uygulamada kişi listesi API'den gelecek
 const mockContacts = [
@@ -20,6 +21,7 @@ const mockContacts = [
 
 export default function AddDebtScreen() {
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
   
   const [debtType, setDebtType] = useState<'owe' | 'owed'>('owed'); // 'owe' = alacak, 'owed' = verecek
   const [selectedContact, setSelectedContact] = useState<{id: string; name: string; phone: string; avatar: string} | null>(null);
@@ -175,20 +177,91 @@ export default function AddDebtScreen() {
       }
 
       // Arkadaşsa debt kaydı oluştur
+      const amountValue = parseFloat(amount);
       const payload = {
         creditor_id: debtType === 'owed' ? selectedContact.id : user.id,   // 'owed'=Borç aldım, karşı taraf alacaklı
         debtor_id: debtType === 'owed' ? user.id : selectedContact.id,     // 'owed'=Borç aldım, ben borçluyum
-        youwillreceive: debtType === 'owe' ? parseFloat(amount) : 0,       // Borç verdiysem alacağım
-        youwillgive: debtType === 'owed' ? parseFloat(amount) : 0,         // Borç aldıysam vereceğim
+        youwillreceive: debtType === 'owe' ? amountValue : 0,  // Borç verdiysem alacağım
+        youwillgive: debtType === 'owed' ? amountValue : 0,    // Borç aldıysam vereceğim
         description: description || null,
         group_id: null as string | null,
         pay_date: new Date(`${date}T${time}:00`).toISOString(),
       };
 
-      const { data, error } = await debtService.createDebt(payload);
+      // Her iki kullanıcı için de ayrı kayıt oluştur
+      console.log('🔍 Creditor payload:', payload);
+      const { data: creditorData, error: creditorError } = await debtService.createDebt(payload);
 
-      if (error) {
-        throw new Error(error.message || 'Borç kaydedilirken hata oluştu');
+      if (creditorError) {
+        throw new Error(creditorError.message || 'Borç kaydedilirken hata oluştu');
+      }
+
+      // Karşı taraf için de kayıt oluştur
+      const debtorPayload = {
+        creditor_id: payload.debtor_id,
+        debtor_id: payload.creditor_id,
+        youwillreceive: 0,  // Karşı taraf alacaklı değil
+        youwillgive: amountValue,  // Karşı taraf borçlu
+        description: payload.description,
+        group_id: payload.group_id,
+        pay_date: payload.pay_date,
+      };
+
+      console.log('🔍 Debtor payload:', debtorPayload);
+      const { data: debtorData, error: debtorError } = await debtService.createDebt(debtorPayload);
+
+      if (debtorError) {
+        console.warn('Karşı taraf için borç kaydı oluşturulamadı:', debtorError);
+        // Bu hata borç oluşturmayı engellemez
+      }
+
+      const data = creditorData; // Ana kayıt olarak creditor'ın kaydını kullan
+
+      // Karşı tarafa bildirim gönder
+      try {
+        // Bildirim gönderilecek kişi: her zaman seçilen kişi
+        const otherUserId = selectedContact.id;
+        const otherUserName = selectedContact.name;
+        const currentUserName = user.email || 'Biri';
+        const amountText = `₺${parseFloat(amount).toFixed(2)}`;
+        
+        console.log('Bildirim gönderiliyor:', {
+          otherUserId,
+          otherUserName,
+          currentUserName,
+          debtType,
+          amountText,
+          debtId: data.id
+        });
+        
+        const notificationResult = await notificationService.createNotification({
+          user_id: otherUserId,
+          title: 'Yeni Borç Kaydı',
+          message: debtType === 'owed' 
+            ? `${currentUserName} size ${amountText} borç verdi.`
+            : `${currentUserName} sizden ${amountText} borç aldı.`,
+          type: 'debt_created',
+          data: {
+            debt_id: data.id,
+            creditor_id: payload.creditor_id,
+            debtor_id: payload.debtor_id,
+            amount: parseFloat(amount),
+            description: description || null
+          }
+        });
+        
+        if (notificationResult.error) {
+          throw new Error(notificationResult.error.message || 'Bildirim oluşturulamadı');
+        }
+        
+        console.log('Bildirim başarıyla gönderildi:', notificationResult.data);
+      } catch (notificationError) {
+        console.error('Bildirim gönderilemedi:', notificationError);
+        // Bildirim hatası borç oluşturmayı engellemez
+        Alert.alert(
+          'Uyarı', 
+          'Borç kaydedildi ancak bildirim gönderilemedi. Bildirim ayarlarınızı kontrol edin.'
+        );
       }
 
       Alert.alert(
@@ -206,33 +279,33 @@ export default function AddDebtScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <SafeAreaView style={styles.headerContainer}>
-        <View style={styles.header}>
+      <SafeAreaView style={[styles.headerContainer, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { backgroundColor: colors.background }]}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backButton}>←</Text>
+            <Text style={[styles.backButton, { color: colors.text }]}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Borç Ekle</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Borç Ekle</Text>
           <View style={styles.headerSpacer}></View>
         </View>
       </SafeAreaView>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.scrollView, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
         {/* Debt Type Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>İşlem Türü</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>İşlem Türü</Text>
           <View style={styles.debtTypeContainer}>
             <TouchableOpacity 
               onPress={() => setDebtType('owed')}
-              style={[styles.debtTypeButton, debtType === 'owed' ? styles.debtTypeButtonOwed : styles.debtTypeButtonInactive]}
+              style={[styles.debtTypeButton, { backgroundColor: colors.card }, debtType === 'owed' ? [styles.debtTypeButtonOwed, { backgroundColor: colors.primary }] : styles.debtTypeButtonInactive]}
             >
               <View style={styles.debtTypeContent}>
                 <Text style={styles.debtTypeIcon}>💳</Text>
-                <Text style={[styles.debtTypeTitle, debtType === 'owed' ? styles.debtTypeTitleOwed : styles.debtTypeTitleInactive]}>
+                <Text style={[styles.debtTypeTitle, debtType === 'owed' ? [styles.debtTypeTitleOwed, { color: colors.primaryText }] : { color: colors.text }]}>
                   Borç Aldım
                 </Text>
-                <Text style={[styles.debtTypeSubtitle, debtType === 'owed' ? styles.debtTypeSubtitleOwed : styles.debtTypeSubtitleInactive]}>
+                <Text style={[styles.debtTypeSubtitle, debtType === 'owed' ? [styles.debtTypeSubtitleOwed, { color: colors.primaryText }] : { color: colors.textSecondary }]}>
                   Birinden borç aldım
                 </Text>
               </View>
@@ -240,14 +313,14 @@ export default function AddDebtScreen() {
             
             <TouchableOpacity 
               onPress={() => setDebtType('owe')}
-              style={[styles.debtTypeButton, debtType === 'owe' ? styles.debtTypeButtonOwe : styles.debtTypeButtonInactive]}
+              style={[styles.debtTypeButton, { backgroundColor: colors.card }, debtType === 'owe' ? [styles.debtTypeButtonOwe, { backgroundColor: colors.primary }] : styles.debtTypeButtonInactive]}
             >
               <View style={styles.debtTypeContent}>
                 <Text style={styles.debtTypeIcon}>💰</Text>
-                <Text style={[styles.debtTypeTitle, debtType === 'owe' ? styles.debtTypeTitleOwe : styles.debtTypeTitleInactive]}>
+                <Text style={[styles.debtTypeTitle, debtType === 'owe' ? [styles.debtTypeTitleOwe, { color: colors.primaryText }] : { color: colors.text }]}>
                   Borç Verdim
                 </Text>
-                <Text style={[styles.debtTypeSubtitle, debtType === 'owe' ? styles.debtTypeSubtitleOwe : styles.debtTypeSubtitleInactive]}>
+                <Text style={[styles.debtTypeSubtitle, debtType === 'owe' ? [styles.debtTypeSubtitleOwe, { color: colors.primaryText }] : { color: colors.textSecondary }]}>
                   Birine borç verdim
                 </Text>
               </View>
@@ -257,26 +330,26 @@ export default function AddDebtScreen() {
 
         {/* Contact Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {debtType === 'owed' ? 'Kimden aldınız?' : 'Kime verdiniz?'}
           </Text>
           <TouchableOpacity 
             onPress={() => setShowContactModal(true)}
-            style={styles.contactSelector}
+            style={[styles.contactSelector, { backgroundColor: colors.card }]}
           >
             {selectedContact ? (
               <View style={styles.contactSelectorContent}>
                 <Text style={styles.contactAvatar}>{selectedContact.avatar}</Text>
                 <View style={styles.contactInfo}>
-                  <Text style={styles.contactName}>{selectedContact.name}</Text>
-                  <Text style={styles.contactPhone}>{selectedContact.phone}</Text>
+                  <Text style={[styles.contactName, { color: colors.text }]}>{selectedContact.name}</Text>
+                  <Text style={[styles.contactPhone, { color: colors.textSecondary }]}>{selectedContact.phone}</Text>
                 </View>
-                <Text style={styles.contactArrow}>→</Text>
+                <Text style={[styles.contactArrow, { color: colors.textSecondary }]}>→</Text>
               </View>
             ) : (
               <View style={styles.contactSelectorPlaceholder}>
-                <Text style={styles.contactPlaceholderText}>Kişi seçin...</Text>
-                <Text style={styles.contactArrow}>→</Text>
+                <Text style={[styles.contactPlaceholderText, { color: colors.textSecondary }]}>Kişi seçin...</Text>
+                <Text style={[styles.contactArrow, { color: colors.textSecondary }]}>→</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -284,13 +357,13 @@ export default function AddDebtScreen() {
 
         {/* Amount */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tutar</Text>
-          <View style={styles.amountContainer}>
-            <Text style={styles.currencySymbol}>₺</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Tutar</Text>
+          <View style={[styles.amountContainer, { backgroundColor: colors.card }]}>
+            <Text style={[styles.currencySymbol, { color: colors.text }]}>₺</Text>
             <TextInput
-              style={styles.amountInput}
+              style={[styles.amountInput, { color: colors.text }]}
               placeholder="0.00"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
@@ -300,12 +373,12 @@ export default function AddDebtScreen() {
 
         {/* Description */}
         <View style={styles.sectionLast}>
-          <Text style={styles.sectionTitle}>Açıklama (İsteğe bağlı)</Text>
-          <View style={styles.descriptionContainer}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Açıklama (İsteğe bağlı)</Text>
+          <View style={[styles.descriptionContainer, { backgroundColor: colors.card }]}>
             <TextInput
-              style={styles.descriptionInput}
+              style={[styles.descriptionInput, { color: colors.text }]}
               placeholder="Borç ile ilgili detaylar..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
               value={description}
               onChangeText={setDescription}
               multiline
@@ -320,9 +393,9 @@ export default function AddDebtScreen() {
           <TouchableOpacity 
             onPress={handleSaveDebt}
             disabled={loading}
-            style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+            style={[styles.saveButton, { backgroundColor: colors.primary }, loading && styles.saveButtonDisabled]}
           >
-            <Text style={styles.saveButtonText}>
+            <Text style={[styles.saveButtonText, { color: colors.primaryText }]}>
               {loading ? 'Kaydediliyor...' : 'Borcu Kaydet'}
             </Text>
           </TouchableOpacity>
@@ -338,28 +411,28 @@ export default function AddDebtScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <View className="flex-1 bg-white">
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           {/* Modal Header */}
-          <SafeAreaView style={styles.modalHeaderContainer}>
-            <View style={styles.modalHeader}>
+          <SafeAreaView style={[styles.modalHeaderContainer, { backgroundColor: colors.background }]}>
+            <View style={[styles.modalHeader, { backgroundColor: colors.background }]}>
               <TouchableOpacity onPress={() => setShowContactModal(false)}>
-                <Text style={styles.modalBackButton}>←</Text>
+                <Text style={[styles.modalBackButton, { color: colors.text }]}>←</Text>
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>Kişi Seç</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Kişi Seç</Text>
               <View style={styles.headerSpacer}></View>
             </View>
           </SafeAreaView>
 
           {/* Search Bar */}
-          <View style={styles.searchSection}>
-            <View style={styles.searchContainer}>
+          <View style={[styles.searchSection, { backgroundColor: colors.surface }]}>
+            <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
               <View style={styles.searchIconContainer}>
-                <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+                <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
               </View>
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: colors.text }]}
                 placeholder="Kişi ara..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.placeholder}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoCapitalize="none"
@@ -372,28 +445,29 @@ export default function AddDebtScreen() {
             data={filteredContacts}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
+            style={{ backgroundColor: colors.background }}
             renderItem={({ item }) => (
               <TouchableOpacity
                 onPress={() => handleContactSelect(item)}
-                style={styles.contactItem}
+                style={[styles.contactItem, { backgroundColor: colors.card }]}
               >
                 <View style={styles.contactItemContent}>
                   <View style={styles.contactItemAvatar}>
                     <Text style={styles.contactItemAvatarText}>{item.avatar}</Text>
                   </View>
                   <View style={styles.contactItemInfo}>
-                    <Text style={styles.contactItemName}>{item.name}</Text>
-                    <Text style={styles.contactItemPhone}>{item.phone}</Text>
+                    <Text style={[styles.contactItemName, { color: colors.text }]}>{item.name}</Text>
+                    <Text style={[styles.contactItemPhone, { color: colors.textSecondary }]}>{item.phone}</Text>
                   </View>
                   {selectedContact?.id === item.id && (
-                    <Text style={styles.contactItemSelected}>✓</Text>
+                    <Text style={[styles.contactItemSelected, { color: colors.primary }]}>✓</Text>
                   )}
                 </View>
               </TouchableOpacity>
             )}
             ListEmptyComponent={() => (
               <View style={styles.emptyListContainer}>
-                <Text style={styles.emptyListText}>Kişi bulunamadı</Text>
+                <Text style={[styles.emptyListText, { color: colors.textSecondary }]}>Kişi bulunamadı</Text>
               </View>
             )}
           />
@@ -406,10 +480,9 @@ export default function AddDebtScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
   },
   headerContainer: {
-    backgroundColor: '#ffffff',
+    // backgroundColor will be set dynamically
   },
   header: {
     flexDirection: 'row',
@@ -417,15 +490,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 16,
-    backgroundColor: '#ffffff',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
   },
   backButton: {
-    color: '#111827',
     fontSize: 24,
   },
   headerSpacer: {
@@ -437,8 +507,6 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: 24,
     paddingVertical: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
   sectionLast: {
     paddingHorizontal: 24,
@@ -447,7 +515,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
     marginBottom: 16,
   },
   debtTypeContainer: {
@@ -462,16 +529,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   debtTypeButtonInactive: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#e5e7eb',
+    // backgroundColor and borderColor will be set dynamically
   },
   debtTypeButtonOwed: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#ef4444',
+    // backgroundColor will be set dynamically
   },
   debtTypeButtonOwe: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#22c55e',
+    // backgroundColor will be set dynamically
   },
   debtTypeContent: {
     alignItems: 'center',
@@ -486,31 +550,29 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   debtTypeTitleInactive: {
-    color: '#374151',
+    // color will be set dynamically
   },
   debtTypeTitleOwed: {
-    color: '#b91c1c',
+    // color will be set dynamically
   },
   debtTypeTitleOwe: {
-    color: '#15803d',
+    // color will be set dynamically
   },
   debtTypeSubtitle: {
     fontSize: 14,
   },
   debtTypeSubtitleInactive: {
-    color: '#6b7280',
+    // color will be set dynamically
   },
   debtTypeSubtitleOwed: {
-    color: '#dc2626',
+    // color will be set dynamically
   },
   debtTypeSubtitleOwe: {
-    color: '#16a34a',
+    // color will be set dynamically
   },
   contactSelector: {
-    backgroundColor: '#f9fafb',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     padding: 16,
   },
   contactSelectorContent: {
@@ -527,14 +589,12 @@ const styles = StyleSheet.create({
   contactName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
   },
   contactPhone: {
     fontSize: 14,
-    color: '#6b7280',
   },
   contactArrow: {
-    color: '#9ca3af',
+    // color will be set dynamically
   },
   contactSelectorPlaceholder: {
     flexDirection: 'row',
@@ -543,13 +603,10 @@ const styles = StyleSheet.create({
   },
   contactPlaceholderText: {
     fontSize: 16,
-    color: '#9ca3af',
   },
   amountContainer: {
-    backgroundColor: '#f9fafb',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -557,26 +614,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 18,
     fontWeight: '600',
-    color: '#374151',
   },
   amountInput: {
     flex: 1,
     paddingVertical: 16,
     paddingRight: 16,
     fontSize: 16,
-    color: '#111827',
   },
   descriptionContainer: {
-    backgroundColor: '#f9fafb',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
   descriptionInput: {
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#111827',
   },
   buttonContainer: {
     paddingHorizontal: 24,
@@ -585,13 +637,11 @@ const styles = StyleSheet.create({
   saveButton: {
     paddingVertical: 16,
     borderRadius: 12,
-    backgroundColor: '#111827',
   },
   saveButtonDisabled: {
-    backgroundColor: '#9ca3af',
+    // backgroundColor will be set dynamically
   },
   saveButtonText: {
-    color: '#ffffff',
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
@@ -599,8 +649,11 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 80,
   },
+  modalContainer: {
+    flex: 1,
+  },
   modalHeaderContainer: {
-    backgroundColor: '#ffffff',
+    // backgroundColor will be set dynamically
   },
   modalHeader: {
     flexDirection: 'row',
@@ -608,29 +661,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
   modalBackButton: {
-    color: '#111827',
     fontSize: 24,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
   },
   searchSection: {
     paddingHorizontal: 24,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
   searchContainer: {
-    backgroundColor: '#f9fafb',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -642,13 +687,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingRight: 16,
     fontSize: 16,
-    color: '#111827',
   },
   contactItem: {
     paddingHorizontal: 24,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f9fafb',
   },
   contactItemContent: {
     flexDirection: 'row',
@@ -657,7 +699,6 @@ const styles = StyleSheet.create({
   contactItemAvatar: {
     width: 48,
     height: 48,
-    backgroundColor: '#f3f4f6',
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
@@ -672,15 +713,12 @@ const styles = StyleSheet.create({
   contactItemName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
   },
   contactItemPhone: {
     fontSize: 14,
-    color: '#6b7280',
     marginTop: 4,
   },
   contactItemSelected: {
-    color: '#3b82f6',
     fontSize: 20,
   },
   emptyListContainer: {
@@ -689,7 +727,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyListText: {
-    color: '#6b7280',
     fontSize: 16,
   },
 });

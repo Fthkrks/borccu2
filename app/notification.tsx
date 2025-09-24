@@ -2,7 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import '../global.css';
 import { friendService, notificationService } from '../services/api';
 
@@ -35,6 +37,7 @@ type FriendRequest = {
 
 export default function NotificationScreen() {
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState('all'); // 'all' or 'unread'
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -124,6 +127,37 @@ export default function NotificationScreen() {
     }
   };
 
+  // Clear all notifications (except friend requests)
+  const handleClearAll = async () => {
+    console.log('🔍 handleClearAll called');
+    if (!user) {
+      console.log('❌ No user found');
+      return;
+    }
+    
+    console.log('🔍 User ID:', user.id);
+    console.log('🔍 Current notifications count:', notifications.length);
+    
+    // Geçici olarak Alert yerine direkt temizleme yap
+    console.log('🔍 Starting direct clear operation...');
+    try {
+      console.log('🔍 Calling clearAllNotifications...');
+      const { error } = await notificationService.clearAllNotifications(user.id);
+      
+      if (error) {
+        console.error('❌ Error clearing notifications:', error);
+        return;
+      }
+      
+      console.log('✅ Notifications cleared successfully');
+      // Local state'i güncelle
+      setNotifications([]);
+      console.log('✅ Local state updated');
+    } catch (error) {
+      console.error('❌ Error clearing notifications:', error);
+    }
+  };
+
   // Combine notifications and friend requests
   const allNotifications = [
     // Regular notifications
@@ -137,17 +171,23 @@ export default function NotificationScreen() {
       data: notification.data
     })),
     // Friend requests as notifications
-    ...friendRequests.map(request => ({
-      id: `friend_request_${request.id}`,
-      type: 'friend_request',
-      title: 'Arkadaşlık İsteği',
-      description: `${request.profiles?.full_name || 'Bilinmeyen Kullanıcı'} size arkadaşlık isteği gönderdi`,
-      time: getTimeAgo(request.created_at),
-      isRead: request.status !== 'pending',
-      from_user: request.profiles,
-      request_id: request.id,
-      friendship_id: request.id
-    }))
+    ...friendRequests.map(request => {
+      console.log('🔍 Mapping friend request:', request);
+      const isRead = request.status !== 'pending';
+      console.log('🔍 Friend request status:', request.status, 'isRead:', isRead);
+      
+      return {
+        id: `friend_request_${request.id}`,
+        type: 'friend_request',
+        title: 'Arkadaşlık İsteği',
+        description: `${request.profiles?.full_name || 'Bilinmeyen Kullanıcı'} size arkadaşlık isteği gönderdi`,
+        time: getTimeAgo(request.created_at),
+        isRead: isRead,
+        from_user: request.profiles,
+        request_id: request.id,
+        friendship_id: request.id
+      };
+    })
   ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
 
   const unreadNotifications = allNotifications.filter(notification => !notification.isRead);
@@ -176,13 +216,16 @@ export default function NotificationScreen() {
     }
   };
 
-  const handleAcceptRequest = async (friendshipId: string) => {
+  const handleAcceptRequest = async (requestId: string) => {
     if (!user) return;
     
+    console.log('🔍 handleAcceptRequest called with requestId:', requestId);
+    
     try {
-      const { error } = await friendService.acceptFriendRequest(friendshipId, user.id);
+      const { error } = await friendService.acceptFriendRequest(requestId, user.id);
       if (error) throw error;
       
+      console.log('✅ Friend request accepted successfully');
       Alert.alert('Başarılı', 'Arkadaşlık isteği kabul edildi! Artık arkadaşsınız.');
       
       // Reload data
@@ -192,18 +235,21 @@ export default function NotificationScreen() {
       setFriendRequests(friendRequestsData || []);
       setNotifications(notificationsData || []);
     } catch (error: any) {
-      console.error('Error accepting friend request:', error);
+      console.error('❌ Error accepting friend request:', error);
       Alert.alert('Hata', error.message || 'İstek kabul edilirken hata oluştu');
     }
   };
 
-  const handleRejectRequest = async (friendshipId: string) => {
+  const handleRejectRequest = async (requestId: string) => {
     if (!user) return;
     
+    console.log('🔍 handleRejectRequest called with requestId:', requestId);
+    
     try {
-      const { error } = await friendService.rejectFriendRequest(friendshipId, user.id);
+      const { error } = await friendService.rejectFriendRequest(requestId, user.id);
       if (error) throw error;
       
+      console.log('✅ Friend request rejected successfully');
       Alert.alert('Başarılı', 'Arkadaşlık isteği reddedildi');
       
       // Reload data
@@ -213,30 +259,59 @@ export default function NotificationScreen() {
       setFriendRequests(friendRequestsData || []);
       setNotifications(notificationsData || []);
     } catch (error: any) {
-      console.error('Error rejecting friend request:', error);
+      console.error('❌ Error rejecting friend request:', error);
       Alert.alert('Hata', error.message || 'İstek reddedilirken hata oluştu');
     }
   };
 
   const getActionButton = (notification: any) => {
-    if (notification.type === 'friend_request' && notification.isRead === false) {
-      return (
-        <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity 
-            style={styles.acceptButton}
-            onPress={() => handleAcceptRequest(notification.friendship_id)}
-          >
-            <Text style={styles.actionButtonText}>Kabul</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.declineButton}
-            onPress={() => handleRejectRequest(notification.friendship_id)}
-          >
-            <Text style={styles.actionButtonText}>Red</Text>
-          </TouchableOpacity>
-        </View>
-      );
+    console.log('🔍 getActionButton called for notification:', {
+      type: notification.type,
+      isRead: notification.isRead,
+      id: notification.id
+    });
+    
+    if (notification.type === 'friend_request') {
+      console.log('🔍 Friend request detected, isRead:', notification.isRead);
+      
+      if (notification.isRead === false) {
+        console.log('🔍 Creating action buttons for notification:', notification);
+        console.log('🔍 Notification keys:', Object.keys(notification));
+        console.log('🔍 Using request_id:', notification.request_id);
+        console.log('🔍 Using friendship_id:', notification.friendship_id);
+        
+        // request_id undefined ise friendship_id kullan
+        const requestId = notification.request_id || notification.friendship_id;
+        console.log('🔍 Final requestId to use:', requestId);
+        
+        if (!requestId) {
+          console.error('❌ No valid request ID found in notification:', notification);
+          return null;
+        }
+        
+        return (
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity 
+              style={[styles.acceptButton, { backgroundColor: colors.success }]}
+              onPress={() => handleAcceptRequest(requestId)}
+            >
+              <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>Kabul</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.declineButton, { backgroundColor: colors.error }]}
+              onPress={() => handleRejectRequest(requestId)}
+            >
+              <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>Red</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      } else {
+        console.log('🔍 Friend request is already read, no buttons shown');
+      }
+    } else {
+      console.log('🔍 Not a friend request, type:', notification.type);
     }
+    
     return null;
   };
 
@@ -244,7 +319,7 @@ export default function NotificationScreen() {
     return (
       <TouchableOpacity 
         key={item.id} 
-        style={[styles.notificationItem, getNotificationStyle(item.type), !item.isRead && styles.notificationItemUnread]}
+        style={[styles.notificationItem, { backgroundColor: colors.card }, getNotificationStyle(item.type), !item.isRead && styles.notificationItemUnread]}
       >
         <View style={styles.notificationContent}>
           <View style={styles.notificationIcon}>
@@ -257,16 +332,16 @@ export default function NotificationScreen() {
           
           <View style={styles.notificationInfo}>
             <View style={styles.notificationHeader}>
-              <Text style={styles.notificationTitle}>{item.title}</Text>
+              <Text style={[styles.notificationTitle, { color: colors.text }]}>{item.title}</Text>
               {!item.isRead && (
-                <View style={styles.unreadIndicator}></View>
+                <View style={[styles.unreadIndicator, { backgroundColor: colors.primary }]}></View>
               )}
             </View>
             
-            <Text style={styles.notificationDescription}>{item.description}</Text>
+            <Text style={[styles.notificationDescription, { color: colors.textSecondary }]}>{item.description}</Text>
             
             <View style={styles.notificationFooter}>
-              <Text style={styles.notificationTime}>{item.time}</Text>
+              <Text style={[styles.notificationTime, { color: colors.textSecondary }]}>{item.time}</Text>
               {getActionButton(item)}
             </View>
           </View>
@@ -276,33 +351,33 @@ export default function NotificationScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backButton}>←</Text>
+          <Text style={[styles.backButton, { color: colors.text }]}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Bildirimler</Text>
-        <TouchableOpacity>
-          <Text style={styles.clearButton}>Temizle</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Bildirimler</Text>
+        <TouchableOpacity onPress={handleClearAll}>
+          <Text style={[styles.clearButton, { color: colors.primary }]}>Temizle</Text>
         </TouchableOpacity>
       </View>
 
       {/* Tabs */}
-      <View style={styles.tabsContainer}>
+      <View style={[styles.tabsContainer, { backgroundColor: colors.surface }]}>
         <TouchableOpacity 
-          style={[styles.tabButton, activeTab === 'all' && styles.tabButtonActive]}
+          style={[styles.tabButton, activeTab === 'all' && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
           onPress={() => setActiveTab('all')}
         >
-          <Text style={[styles.tabText, activeTab === 'all' ? styles.tabTextActive : styles.tabTextInactive]}>
+          <Text style={[styles.tabText, activeTab === 'all' ? [styles.tabTextActive, { color: colors.primaryText }] : { color: colors.textSecondary }]}>
             Tümü ({allNotifications.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.tabButton, activeTab === 'unread' && styles.tabButtonActive]}
+          style={[styles.tabButton, activeTab === 'unread' && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
           onPress={() => setActiveTab('unread')}
         >
-          <Text style={[styles.tabText, activeTab === 'unread' ? styles.tabTextActive : styles.tabTextInactive]}>
+          <Text style={[styles.tabText, activeTab === 'unread' ? [styles.tabTextActive, { color: colors.primaryText }] : { color: colors.textSecondary }]}>
             Okunmamış ({unreadNotifications.length})
           </Text>
         </TouchableOpacity>
@@ -310,30 +385,30 @@ export default function NotificationScreen() {
 
       {/* Notifications List */}
       <ScrollView 
-        style={styles.scrollView} 
+        style={[styles.scrollView, { backgroundColor: colors.background }]} 
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#3B82F6']}
-            tintColor="#3B82F6"
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
       >
         {loading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Bildirimler yükleniyor...</Text>
+            <Text style={[styles.loadingText, { color: colors.text }]}>Bildirimler yükleniyor...</Text>
           </View>
         ) : currentNotifications.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>
-              <Ionicons name="notifications-off-outline" size={64} color="#D1D5DB" />
+              <Ionicons name="notifications-off-outline" size={64} color={colors.textSecondary} />
             </View>
-            <Text style={styles.emptyTitle}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
               {activeTab === 'unread' ? 'Okunmamış bildirim yok' : 'Henüz bildirim yok'}
             </Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               {activeTab === 'unread' 
                 ? 'Tüm bildirimlerinizi okumuşsunuz!' 
                 : 'Borç ve ödeme bildirimleriniz burada görünecek'
@@ -345,7 +420,7 @@ export default function NotificationScreen() {
             {/* Bugün */}
             {currentNotifications.some(n => n.time.includes('dk') || n.time.includes('sa')) && (
               <>
-                <Text style={styles.sectionHeader}>Bugün</Text>
+                <Text style={[styles.sectionHeader, { color: colors.text }]}>Bugün</Text>
                 {currentNotifications
                   .filter(n => n.time.includes('dk') || n.time.includes('sa'))
                   .map(renderNotificationItem)
@@ -356,7 +431,7 @@ export default function NotificationScreen() {
             {/* Bu Hafta */}
             {currentNotifications.some(n => n.time.includes('g')) && (
               <>
-                <Text style={[styles.sectionHeader, styles.sectionHeaderSpaced]}>Bu Hafta</Text>
+                <Text style={[styles.sectionHeader, styles.sectionHeaderSpaced, { color: colors.text }]}>Bu Hafta</Text>
                 {currentNotifications
                   .filter(n => n.time.includes('g'))
                   .map(renderNotificationItem)
@@ -368,30 +443,29 @@ export default function NotificationScreen() {
 
         {/* Bildirim ayarları */}
         {currentNotifications.length > 0 && (
-          <View style={styles.settingsContainer}>
-            <TouchableOpacity style={styles.settingsButton}>
+          <View style={[styles.settingsContainer, { backgroundColor: colors.card }]}>
+            <TouchableOpacity style={[styles.settingsButton, { backgroundColor: colors.card }]}>
               <View style={styles.settingsContent}>
                 <View style={styles.settingsInfo}>
                   <Text style={styles.settingsIcon}>⚙️</Text>
                   <View>
-                    <Text style={styles.settingsTitle}>Bildirim Ayarları</Text>
-                    <Text style={styles.settingsSubtitle}>Hangi bildirimleri almak istediğinizi seçin</Text>
+                    <Text style={[styles.settingsTitle, { color: colors.text }]}>Bildirim Ayarları</Text>
+                    <Text style={[styles.settingsSubtitle, { color: colors.textSecondary }]}>Hangi bildirimleri almak istediğinizi seçin</Text>
                   </View>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
               </View>
             </TouchableOpacity>
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
   },
   header: {
     flexDirection: 'row',
@@ -400,8 +474,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     paddingTop: 48,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
   backButton: {
     fontSize: 24,

@@ -6,7 +6,7 @@ import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { isSupabaseConfigured } from '../../lib/supabase';
-import { debtService, friendService, groupService } from '../../services/api';
+import { debtService, friendService, groupService, notificationService } from '../../services/api';
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -18,6 +18,7 @@ export default function HomeScreen() {
   const [debts, setDebts] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
   const [hasNotifications, setHasNotifications] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
   
   // Filter and pagination states
   const [debtFilter, setDebtFilter] = useState('');
@@ -63,10 +64,11 @@ export default function HomeScreen() {
       }
 
       // Borçları, grupları ve bildirimleri paralel olarak yükle
-      const [debtsResult, groupsResult, notificationsResult] = await Promise.all([
+      const [debtsResult, groupsResult, notificationsResult, unreadNotificationsResult] = await Promise.all([
         debtService.getDebts(user.id),
         groupService.getGroups(user.id),
-        friendService.getFriendRequests(user.id)
+        friendService.getFriendRequests(user.id),
+        notificationService.getNotifications(user.id)
       ]);
 
       if (debtsResult.data) {
@@ -79,6 +81,16 @@ export default function HomeScreen() {
 
       // Check if there are pending friend requests
       setHasNotifications((notificationsResult.data?.length || 0) > 0);
+      
+      // Calculate unread notification count
+      if (unreadNotificationsResult.data) {
+        const unreadCount = unreadNotificationsResult.data.filter((notification: any) => !notification.read).length;
+        setNotificationCount(unreadCount);
+        setHasNotifications(unreadCount > 0);
+      } else {
+        setNotificationCount(0);
+        setHasNotifications(false);
+      }
       
       setHasData((debtsResult.data?.length || 0) > 0 || (groupsResult.data?.length || 0) > 0);
     } catch (error) {
@@ -96,10 +108,10 @@ export default function HomeScreen() {
   // Hesaplanan değerler - API'den gelen işlenmiş veriye göre
   const debtsData = {
     youwillreceive: debts
-      .filter(d => !d.is_settled)
+      .filter(d => !d.is_settled && d.creditor_id === user?.id)
       .reduce((sum, d) => sum + (d.youwillreceive || 0), 0),
     youwillgive: debts
-      .filter(d => !d.is_settled)
+      .filter(d => !d.is_settled && d.debtor_id === user?.id)
       .reduce((sum, d) => sum + (d.youwillgive || 0), 0),
     allDebts: debts
       .filter(d => !d.is_settled)
@@ -111,8 +123,10 @@ export default function HomeScreen() {
           other_party: d.other_party
         });
         
-        const amount = (d.youwillreceive || 0) + (d.youwillgive || 0);
-        const type = (d.youwillreceive || 0) > 0 ? 'owe' as const : 'owed' as const;
+        // Kullanıcının perspektifinden borç miktarını hesapla
+        const isCreditor = d.creditor_id === user?.id;
+        const amount = isCreditor ? (d.youwillreceive || 0) : (d.youwillgive || 0);
+        const type = isCreditor ? 'owe' as const : 'owed' as const;
         const name = d.other_party?.full_name || d.other_party?.email || 'Bilinmeyen';
         
         console.log('🔍 Mapped result:', { amount, type, name });
@@ -127,7 +141,8 @@ export default function HomeScreen() {
           description: d.description,
           pay_date: d.pay_date || undefined
         };
-      }),
+      })
+      .filter(debt => debt.amount > 0), // 0 tutarlı borçları filtrele
     groups: groups.map(group => ({
       id: group.id,
       name: group.name,
@@ -191,7 +206,11 @@ export default function HomeScreen() {
         <TouchableOpacity onPress={() => router.push('/notification')} style={styles.notificationButton}>
           <Ionicons name="notifications-outline" size={24} color={colors.icon} />
           {hasNotifications && (
-            <View style={[styles.notificationBadge, { backgroundColor: colors.primary }]}></View>
+            <View style={[styles.notificationBadge, { backgroundColor: colors.primary }]}>
+              <Text style={styles.notificationBadgeText}>
+                {notificationCount > 99 ? '99+' : notificationCount}
+              </Text>
+            </View>
           )}
         </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Borçlar</Text>
@@ -230,7 +249,11 @@ export default function HomeScreen() {
         <TouchableOpacity onPress={() => router.push('/notification')} style={styles.notificationButton}>
           <Ionicons name="notifications-outline" size={24} color={colors.icon} />
           {hasNotifications && (
-            <View style={styles.notificationBadge}></View>
+            <View style={[styles.notificationBadge, { backgroundColor: colors.primary }]}>
+              <Text style={styles.notificationBadgeText}>
+                {notificationCount > 99 ? '99+' : notificationCount}
+              </Text>
+            </View>
           )}
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Borçlar</Text>
@@ -350,10 +373,10 @@ export default function HomeScreen() {
                   {debt.name}
                 </Text>
                 <Text style={[styles.debtDescription, { color: colors.textSecondary }]}>
-                  {debt.youwillreceive > 0 && debt.youwillgive === 0 ? 'Size borçlu' : 'Siz borçlusunuz'}
+                  {debt.type === 'owe' ? 'Size borçlu' : 'Siz borçlusunuz'}
                 </Text>
               </View>
-              <Text style={[styles.debtAmount, { color: debt.youwillreceive > 0 && debt.youwillgive === 0 ? colors.success : colors.error }]}>
+              <Text style={[styles.debtAmount, { color: debt.type === 'owe' ? colors.success : colors.error }]}>
                 ₺{debt.amount}
               </Text>
             </TouchableOpacity>
@@ -580,9 +603,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   loadingContainer: {
     flex: 1,

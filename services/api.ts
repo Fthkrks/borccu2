@@ -478,6 +478,8 @@ export const invitationService = {
 export const notificationService = {
   async createNotification(notification: Inserts<'notifications'>) {
     try {
+      console.log('NotificationService: Bildirim oluşturuluyor:', notification);
+      
       const { data, error } = await supabase
         .from('notifications')
         .insert({
@@ -492,10 +494,16 @@ export const notificationService = {
         .select()
         .single();
       
-      return { data, error };
+      if (error) {
+        console.error('NotificationService: Supabase hatası:', error);
+        return { data: null, error };
+      }
+      
+      console.log('NotificationService: Bildirim başarıyla oluşturuldu:', data);
+      return { data, error: null };
     } catch (error) {
-      console.warn('Could not create notification, table may not exist');
-      return { data: null, error: null };
+      console.error('NotificationService: Genel hata:', error);
+      return { data: null, error: error as any };
     }
   },
 
@@ -556,6 +564,31 @@ export const notificationService = {
       return { error };
     } catch (error) {
       console.warn('Could not delete notification, table may not exist');
+      return { error: null };
+    }
+  },
+
+  async clearAllNotifications(userId: string) {
+    try {
+      console.log('🔍 clearAllNotifications called with userId:', userId);
+      
+      // Arkadaşlık istekleri hariç tüm bildirimleri sil
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId)
+        .neq('type', 'friend_request');
+      
+      if (error) {
+        console.error('❌ Supabase error in clearAllNotifications:', error);
+      } else {
+        console.log('✅ clearAllNotifications completed successfully');
+      }
+      
+      return { error };
+    } catch (error) {
+      console.error('❌ Exception in clearAllNotifications:', error);
+      console.warn('Could not clear notifications, table may not exist');
       return { error: null };
     }
   },
