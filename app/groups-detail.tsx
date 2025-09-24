@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import { ThemeColors, useTheme } from '../contexts/ThemeContext';
 import '../global.css';
 import { friendService, groupMemberService, groupService } from '../services/api';
 
@@ -24,6 +25,8 @@ type GroupMember = {
 export default function GroupsDetail() {
   const { groupId } = useLocalSearchParams();
   const { user } = useAuth();
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   
   const [groupDetail, setGroupDetail] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -460,12 +463,12 @@ export default function GroupsDetail() {
           <View style={styles.searchSection}>
             <View style={styles.searchContainer}>
               <View style={styles.searchIconContainer}>
-                <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+                <Ionicons name="search-outline" size={18} color={colors.iconSecondary} />
               </View>
               <TextInput
                 style={styles.searchInput}
                 placeholder="Kişi ara..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.placeholder}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoCapitalize="none"
@@ -519,434 +522,435 @@ export default function GroupsDetail() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: '#6b7280',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    paddingTop: 48,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  backButton: {
-    color: '#4b5563',
-    fontSize: 24,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  menuButton: {
-    color: '#4b5563',
-    fontSize: 18,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    paddingBottom: 85,
-    flexGrow: 1,
-  },
-  summarySection: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: '#4b5563',
-    marginBottom: 8,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  summaryCard: {
-    flex: 1,
-  },
-  summaryCardMiddle: {
-    paddingHorizontal: 12,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 4,
-  },
-  summaryTotalAmount: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  summaryPaidAmount: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  summaryPendingAmount: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#dc2626',
-  },
-  progressSection: {
-    marginTop: 16,
-  },
-  progressBarBackground: {
-    width: '100%',
-    height: 12,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 6,
-  },
-  progressBarFill: {
-    height: 12,
-    backgroundColor: '#22c55e',
-    borderRadius: 6,
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  membersSection: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-  },
-  membersSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  membersSectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  addMemberButton: {
-    backgroundColor: '#111827',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  addMemberButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  memberCard: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  memberCardLast: {
-    marginBottom: 0,
-  },
-  memberInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  memberInfoLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  memberAvatar: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  memberAvatarText: {
-    fontSize: 20,
-  },
-  memberDetails: {
-    flex: 1,
-  },
-  memberName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  memberOwnerLabel: {
-    fontSize: 14,
-    color: '#2563eb',
-    marginLeft: 8,
-  },
-  memberDebt: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  memberInfoRight: {
-    alignItems: 'flex-end',
-  },
-  memberOwnerStatus: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2563eb',
-  },
-  memberStatus: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  memberStatusPaid: {
-    color: '#059669',
-  },
-  memberStatusUnpaid: {
-    color: '#dc2626',
-  },
-  memberEmail: {
-    fontSize: 12,
-    color: '#6b7280',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    alignItems: 'center',
-  },
-  markPaidButton: {
-    backgroundColor: '#059669',
-  },
-  markPaidButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  reminderButton: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    backgroundColor: '#ffffff',
-  },
-  reminderButtonText: {
-    color: '#374151',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  closeGroupSection: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
-  },
-  closeGroupButton: {
-    backgroundColor: '#dc2626',
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  closeGroupButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  closeGroupNote: {
-    fontSize: 12,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  modalHeaderContainer: {
-    backgroundColor: '#ffffff',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  modalBackButton: {
-    color: '#111827',
-    fontSize: 24,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  modalAddButton: {
-    backgroundColor: '#111827',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  modalAddButtonDisabled: {
-    backgroundColor: '#9ca3af',
-  },
-  modalAddButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  selectedContactsHeader: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  selectedContactsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  selectedContactItem: {
-    alignItems: 'center',
-  },
-  selectedContactWrapper: {
-    position: 'relative',
-  },
-  selectedContactAvatar: {
-    width: 56,
-    height: 56,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selectedContactAvatarText: {
-    fontSize: 20,
-  },
-  removeSelectedContactButton: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 20,
-    height: 20,
-    backgroundColor: '#ef4444',
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  removeSelectedContactButtonText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  selectedContactName: {
-    fontSize: 12,
-    color: '#4b5563',
-    marginTop: 4,
-    maxWidth: 50,
-    textAlign: 'center',
-  },
-  searchSection: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  searchContainer: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  searchIconContainer: {
-    paddingHorizontal: 16,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingRight: 16,
-    fontSize: 16,
-    color: '#111827',
-  },
-  contactItem: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f9fafb',
-  },
-  contactItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  contactItemAvatar: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  contactItemAvatarText: {
-    fontSize: 20,
-  },
-  contactItemInfo: {
-    flex: 1,
-  },
-  contactItemName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  contactItemNameSelected: {
-    color: '#9ca3af',
-  },
-  contactItemPhone: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  selectedIndicator: {
-    width: 24,
-    height: 24,
-    backgroundColor: '#22c55e',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selectedIndicatorText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  emptyListContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    alignItems: 'center',
-  },
-  emptyListText: {
-    color: '#6b7280',
-    fontSize: 16,
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      color: colors.textSecondary,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      paddingTop: 48,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    backButton: {
+      color: colors.icon,
+      fontSize: 24,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    menuButton: {
+      color: colors.icon,
+      fontSize: 18,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollViewContent: {
+      paddingBottom: 85,
+      flexGrow: 1,
+    },
+    summarySection: {
+      paddingHorizontal: 24,
+      paddingVertical: 24,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    descriptionText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 8,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    summaryCard: {
+      flex: 1,
+    },
+    summaryCardMiddle: {
+      paddingHorizontal: 12,
+    },
+    summaryLabel: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 4,
+    },
+    summaryTotalAmount: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    summaryPaidAmount: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.success,
+    },
+    summaryPendingAmount: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.error,
+    },
+    progressSection: {
+      marginTop: 16,
+    },
+    progressBarBackground: {
+      width: '100%',
+      height: 12,
+      backgroundColor: colors.divider,
+      borderRadius: 6,
+    },
+    progressBarFill: {
+      height: 12,
+      backgroundColor: colors.success,
+      borderRadius: 6,
+    },
+    progressText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 8,
+      textAlign: 'center',
+    },
+    membersSection: {
+      paddingHorizontal: 24,
+      paddingVertical: 24,
+    },
+    membersSectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+    },
+    membersSectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    addMemberButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+    },
+    addMemberButtonText: {
+      color: colors.primaryText,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    memberCard: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+    },
+    memberCardLast: {
+      marginBottom: 0,
+    },
+    memberInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    memberInfoLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    memberAvatar: {
+      width: 48,
+      height: 48,
+      backgroundColor: colors.surface,
+      borderRadius: 24,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    memberAvatarText: {
+      fontSize: 20,
+    },
+    memberDetails: {
+      flex: 1,
+    },
+    memberName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    memberOwnerLabel: {
+      fontSize: 14,
+      color: colors.primary,
+      marginLeft: 8,
+    },
+    memberDebt: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    memberInfoRight: {
+      alignItems: 'flex-end',
+    },
+    memberOwnerStatus: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    memberStatus: {
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    memberStatusPaid: {
+      color: colors.success,
+    },
+    memberStatusUnpaid: {
+      color: colors.error,
+    },
+    memberEmail: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    actionButtons: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    actionButton: {
+      flex: 1,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+      alignItems: 'center',
+    },
+    markPaidButton: {
+      backgroundColor: colors.success,
+    },
+    markPaidButtonText: {
+      color: '#ffffff',
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    reminderButton: {
+      borderWidth: 1,
+      borderColor: colors.inputBorder,
+      backgroundColor: colors.card,
+    },
+    reminderButtonText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    closeGroupSection: {
+      paddingHorizontal: 24,
+      paddingVertical: 24,
+      borderTopWidth: 1,
+      borderTopColor: colors.divider,
+    },
+    closeGroupButton: {
+      backgroundColor: colors.error,
+      paddingVertical: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    closeGroupButtonText: {
+      color: '#ffffff',
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    closeGroupNote: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 8,
+    },
+    modalContainer: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    modalHeaderContainer: {
+      backgroundColor: colors.background,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    modalBackButton: {
+      color: colors.text,
+      fontSize: 24,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    modalAddButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 20,
+    },
+    modalAddButtonDisabled: {
+      backgroundColor: colors.textTertiary,
+    },
+    modalAddButtonText: {
+      color: colors.primaryText,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    selectedContactsHeader: {
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    selectedContactsRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    selectedContactItem: {
+      alignItems: 'center',
+    },
+    selectedContactWrapper: {
+      position: 'relative',
+    },
+    selectedContactAvatar: {
+      width: 56,
+      height: 56,
+      backgroundColor: colors.surface,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    selectedContactAvatarText: {
+      fontSize: 20,
+    },
+    removeSelectedContactButton: {
+      position: 'absolute',
+      top: -4,
+      right: -4,
+      width: 20,
+      height: 20,
+      backgroundColor: colors.error,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    removeSelectedContactButtonText: {
+      color: '#ffffff',
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    selectedContactName: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 4,
+      maxWidth: 50,
+      textAlign: 'center',
+    },
+    searchSection: {
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.divider,
+    },
+    searchContainer: {
+      backgroundColor: colors.inputBackground,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.inputBorder,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    searchIconContainer: {
+      paddingHorizontal: 16,
+    },
+    searchInput: {
+      flex: 1,
+      paddingVertical: 12,
+      paddingRight: 16,
+      fontSize: 16,
+      color: colors.text,
+    },
+    contactItem: {
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+    },
+    contactItemContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    contactItemAvatar: {
+      width: 48,
+      height: 48,
+      backgroundColor: colors.surface,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 16,
+    },
+    contactItemAvatarText: {
+      fontSize: 20,
+    },
+    contactItemInfo: {
+      flex: 1,
+    },
+    contactItemName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    contactItemNameSelected: {
+      color: colors.textTertiary,
+    },
+    contactItemPhone: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    selectedIndicator: {
+      width: 24,
+      height: 24,
+      backgroundColor: colors.success,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    selectedIndicatorText: {
+      color: '#ffffff',
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    emptyListContainer: {
+      paddingHorizontal: 24,
+      paddingVertical: 32,
+      alignItems: 'center',
+    },
+    emptyListText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+  });

@@ -108,13 +108,13 @@ export default function HomeScreen() {
   // Hesaplanan değerler - API'den gelen işlenmiş veriye göre
   const debtsData = {
     youwillreceive: debts
-      .filter(d => !d.is_settled && d.creditor_id === user?.id)
+      .filter(d => !d.is_settled && d.debtor_id === user?.id)
       .reduce((sum, d) => sum + (d.youwillreceive || 0), 0),
     youwillgive: debts
       .filter(d => !d.is_settled && d.debtor_id === user?.id)
       .reduce((sum, d) => sum + (d.youwillgive || 0), 0),
     allDebts: debts
-      .filter(d => !d.is_settled)
+      .filter(d => !d.is_settled && d.debtor_id === user?.id)
       .map(d => {
         console.log('🔍 Debt mapping DEBUG:', { 
           id: d.id, 
@@ -123,10 +123,9 @@ export default function HomeScreen() {
           other_party: d.other_party
         });
         
-        // Kullanıcının perspektifinden borç miktarını hesapla
-        const isCreditor = d.creditor_id === user?.id;
-        const amount = isCreditor ? (d.youwillreceive || 0) : (d.youwillgive || 0);
-        const type = isCreditor ? 'owe' as const : 'owed' as const;
+        // Kullanıcının perspektifinden borç miktarını hesapla (sadece debtor kayıtları)
+        const amount = (d.youwillreceive || 0) > 0 ? (d.youwillreceive || 0) : (d.youwillgive || 0);
+        const type = (d.youwillreceive || 0) > 0 ? ('owe' as const) : ('owed' as const);
         const name = d.other_party?.full_name || d.other_party?.email || 'Bilinmeyen';
         
         console.log('🔍 Mapped result:', { amount, type, name });

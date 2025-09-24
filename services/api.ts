@@ -84,6 +84,9 @@ export const debtService = {
   },
 
   async getDebts(userId: string) {
+    // Yalnızca kullanıcının tutarı olan kayıtları getir:
+    // - Alacaklı ise youwillreceive > 0
+    // - Borçlu ise youwillgive > 0
     const { data, error } = await supabase
       .from('debts')
       .select(`
@@ -91,7 +94,9 @@ export const debtService = {
         creditor:profiles!debts_creditor_id_fkey (id, full_name, email, avatar_url),
         debtor:profiles!debts_debtor_id_fkey (id, full_name, email, avatar_url)
       `)
-      .or(`creditor_id.eq.${userId},debtor_id.eq.${userId}`)
+      .or(
+        `and(creditor_id.eq.${userId},youwillreceive.gt.0),and(debtor_id.eq.${userId},youwillgive.gt.0)`
+      )
       .order('created_at', { ascending: false });
     
     if (error) {

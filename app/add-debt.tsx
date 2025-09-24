@@ -178,11 +178,15 @@ export default function AddDebtScreen() {
 
       // Arkadaşsa debt kaydı oluştur
       const amountValue = parseFloat(amount);
+      const iBorrowed = debtType === 'owed'; // 'owed' = borç aldım (ben borçluyum)
+      const youWillReceive = debtType === 'owe' ? amountValue : 0; // borç verdiysem alacağım (yeşil)
+      const youWillGive = iBorrowed ? amountValue : 0;    // borç aldıysam vereceğim (kırmızı)
+
       const payload = {
-        creditor_id: debtType === 'owed' ? selectedContact.id : user.id,   // 'owed'=Borç aldım, karşı taraf alacaklı
-        debtor_id: debtType === 'owed' ? user.id : selectedContact.id,     // 'owed'=Borç aldım, ben borçluyum
-        youwillreceive: debtType === 'owe' ? amountValue : 0,  // Borç verdiysem alacağım
-        youwillgive: debtType === 'owed' ? amountValue : 0,    // Borç aldıysam vereceğim
+        creditor_id: iBorrowed ? selectedContact.id : user.id,   // borç aldım → karşı taraf alacaklı
+        debtor_id: iBorrowed ? user.id : selectedContact.id,      // borç aldım → ben borçluyum
+        youwillreceive: youWillReceive,
+        youwillgive: youWillGive,
         description: description || null,
         group_id: null as string | null,
         pay_date: new Date(`${date}T${time}:00`).toISOString(),
@@ -200,8 +204,8 @@ export default function AddDebtScreen() {
       const debtorPayload = {
         creditor_id: payload.debtor_id,
         debtor_id: payload.creditor_id,
-        youwillreceive: 0,  // Karşı taraf alacaklı değil
-        youwillgive: amountValue,  // Karşı taraf borçlu
+        youwillreceive: youWillGive ,  // Karşı taraf alacaklı değil
+        youwillgive: youWillReceive,  // Karşı taraf borçlu
         description: payload.description,
         group_id: payload.group_id,
         pay_date: payload.pay_date,
@@ -216,6 +220,7 @@ export default function AddDebtScreen() {
       }
 
       const data = creditorData; // Ana kayıt olarak creditor'ın kaydını kullan
+      
 
       // Karşı tarafa bildirim gönder
       try {
@@ -237,9 +242,9 @@ export default function AddDebtScreen() {
         const notificationResult = await notificationService.createNotification({
           user_id: otherUserId,
           title: 'Yeni Borç Kaydı',
-          message: debtType === 'owed' 
-            ? `${currentUserName} size ${amountText} borç verdi.`
-            : `${currentUserName} sizden ${amountText} borç aldı.`,
+          message: iBorrowed
+            ? `${currentUserName} sizden ${amountText} borç aldı.`
+            : `${currentUserName} size ${amountText} borç verdi.`,
           type: 'debt_created',
           data: {
             debt_id: data.id,
@@ -297,30 +302,30 @@ export default function AddDebtScreen() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>İşlem Türü</Text>
           <View style={styles.debtTypeContainer}>
             <TouchableOpacity 
-              onPress={() => setDebtType('owed')}
-              style={[styles.debtTypeButton, { backgroundColor: colors.card }, debtType === 'owed' ? [styles.debtTypeButtonOwed, { backgroundColor: colors.primary }] : styles.debtTypeButtonInactive]}
+              onPress={() => setDebtType('owe')}
+              style={[styles.debtTypeButton, { backgroundColor: colors.card }, debtType === 'owe' ? [styles.debtTypeButtonOwed, { backgroundColor: colors.primary }] : styles.debtTypeButtonInactive]}
             >
               <View style={styles.debtTypeContent}>
                 <Text style={styles.debtTypeIcon}>💳</Text>
-                <Text style={[styles.debtTypeTitle, debtType === 'owed' ? [styles.debtTypeTitleOwed, { color: colors.primaryText }] : { color: colors.text }]}>
+                <Text style={[styles.debtTypeTitle, debtType === 'owe' ? [styles.debtTypeTitleOwed, { color: colors.primaryText }] : { color: colors.text }]}>
                   Borç Aldım
                 </Text>
-                <Text style={[styles.debtTypeSubtitle, debtType === 'owed' ? [styles.debtTypeSubtitleOwed, { color: colors.primaryText }] : { color: colors.textSecondary }]}>
+                <Text style={[styles.debtTypeSubtitle, debtType === 'owe' ? [styles.debtTypeSubtitleOwed, { color: colors.primaryText }] : { color: colors.textSecondary }]}>
                   Birinden borç aldım
                 </Text>
               </View>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              onPress={() => setDebtType('owe')}
-              style={[styles.debtTypeButton, { backgroundColor: colors.card }, debtType === 'owe' ? [styles.debtTypeButtonOwe, { backgroundColor: colors.primary }] : styles.debtTypeButtonInactive]}
+              onPress={() => setDebtType('owed')}
+              style={[styles.debtTypeButton, { backgroundColor: colors.card }, debtType === 'owed' ? [styles.debtTypeButtonOwe, { backgroundColor: colors.primary }] : styles.debtTypeButtonInactive]}
             >
               <View style={styles.debtTypeContent}>
                 <Text style={styles.debtTypeIcon}>💰</Text>
-                <Text style={[styles.debtTypeTitle, debtType === 'owe' ? [styles.debtTypeTitleOwe, { color: colors.primaryText }] : { color: colors.text }]}>
+                <Text style={[styles.debtTypeTitle, debtType === 'owed' ? [styles.debtTypeTitleOwe, { color: colors.primaryText }] : { color: colors.text }]}>
                   Borç Verdim
                 </Text>
-                <Text style={[styles.debtTypeSubtitle, debtType === 'owe' ? [styles.debtTypeSubtitleOwe, { color: colors.primaryText }] : { color: colors.textSecondary }]}>
+                <Text style={[styles.debtTypeSubtitle, debtType === 'owed' ? [styles.debtTypeSubtitleOwe, { color: colors.primaryText }] : { color: colors.textSecondary }]}>
                   Birine borç verdim
                 </Text>
               </View>
